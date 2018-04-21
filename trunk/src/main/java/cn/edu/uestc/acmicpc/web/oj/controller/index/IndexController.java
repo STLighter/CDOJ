@@ -1,7 +1,7 @@
 package cn.edu.uestc.acmicpc.web.oj.controller.index;
 
-import cn.edu.uestc.acmicpc.db.condition.impl.MessageCondition;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
+import cn.edu.uestc.acmicpc.db.criteria.MessageCriteria;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.service.iface.DepartmentService;
 import cn.edu.uestc.acmicpc.service.iface.LanguageService;
 import cn.edu.uestc.acmicpc.service.iface.MessageService;
@@ -22,16 +22,13 @@ import cn.edu.uestc.acmicpc.util.exception.AppException;
 import cn.edu.uestc.acmicpc.util.helper.EnumTypeUtil;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
 import cn.edu.uestc.acmicpc.web.oj.controller.base.BaseController;
-
+import java.util.HashMap;
+import java.util.Map;
+import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpSession;
 
 /**
  * Controller for home page.
@@ -48,8 +45,8 @@ public class IndexController extends BaseController {
 
   @Autowired
   public IndexController(DepartmentService departmentService,
-      LanguageService languageService, MessageService messageService,
-      RecentContestService recentContestService) {
+                         LanguageService languageService, MessageService messageService,
+                         RecentContestService recentContestService) {
     this.departmentService = departmentService;
     this.languageService = languageService;
     this.messageService = messageService;
@@ -68,7 +65,6 @@ public class IndexController extends BaseController {
 
   /**
    * Force redirect to this page when user use IE 6 7 8
-   * @return
    */
   @RequestMapping("fuckIE")
   public String fuckIE() {
@@ -77,7 +73,9 @@ public class IndexController extends BaseController {
 
   @RequestMapping("recentContest")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> recentContestList() {
+  public
+  @ResponseBody
+  Map<String, Object> recentContestList() {
     Map<String, Object> result = new HashMap<>();
     result.put("recentContestList", recentContestService.getRecentContestList());
     return result;
@@ -85,7 +83,9 @@ public class IndexController extends BaseController {
 
   @RequestMapping("data")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> data(HttpSession session) {
+  public
+  @ResponseBody
+  Map<String, Object> data(HttpSession session) {
     Map<String, Object> result = new HashMap<>();
     try {
       UserDto currentUser = getCurrentUser(session);
@@ -94,18 +94,16 @@ public class IndexController extends BaseController {
       } else {
         result.put("hasLogin", true);
         result.put("currentUser", currentUser);
-        MessageCondition messageCondition = new MessageCondition();
-        messageCondition.receiverId = currentUser.getUserId();
-        messageCondition.isOpened = false;
-        messageCondition.orderFields = "time";
-        messageCondition.orderAsc = "false";
-        Long totalUnreadMessage = messageService.count(messageCondition);
+        MessageCriteria criteria = new MessageCriteria();
+        criteria.userId = currentUser.getUserId();
+        criteria.isOpened = false;
+        criteria.orderFields = "time";
+        criteria.orderAsc = "false";
+        Long totalUnreadMessage = messageService.count(criteria);
         result.put("totalUnreadMessages", totalUnreadMessage);
         // Show first 10 unread messages
-        PageInfo pageInfo = buildPageInfo(totalUnreadMessage, 1L,
-            10L, null);
-        result.put("unreadMessages", messageService.getMessageForReceiverDtoList(messageCondition,
-            pageInfo));
+        PageInfo pageInfo = buildPageInfo(totalUnreadMessage, 1L, 10L, null);
+        result.put("unreadMessages", messageService.getMessageForReceiverDtoList(criteria, pageInfo));
       }
       result.put("result", "success");
     } catch (AppException e) {
@@ -117,7 +115,9 @@ public class IndexController extends BaseController {
 
   @RequestMapping(value = "globalData")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> globalData() {
+  public
+  @ResponseBody
+  Map<String, Object> globalData() {
     Map<String, Object> result = new HashMap<>();
     result.put("departmentList", departmentService.getDepartmentList());
     result.put("authenticationTypeList",

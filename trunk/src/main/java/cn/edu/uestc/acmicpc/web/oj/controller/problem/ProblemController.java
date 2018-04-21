@@ -1,10 +1,10 @@
 package cn.edu.uestc.acmicpc.web.oj.controller.problem;
 
 import cn.edu.uestc.acmicpc.db.condition.impl.ProblemCondition;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.problem.ProblemDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.problem.ProblemEditDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.problem.ProblemListDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
 import cn.edu.uestc.acmicpc.service.iface.FileService;
 import cn.edu.uestc.acmicpc.service.iface.PictureService;
 import cn.edu.uestc.acmicpc.service.iface.ProblemService;
@@ -20,7 +20,12 @@ import cn.edu.uestc.acmicpc.util.settings.Settings;
 import cn.edu.uestc.acmicpc.web.dto.FileUploadDto;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
 import cn.edu.uestc.acmicpc.web.oj.controller.base.BaseController;
-
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -31,14 +36,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpSession;
-import javax.validation.Valid;
 
 @SuppressWarnings("deprecation")
 @Controller
@@ -252,9 +249,7 @@ public class ProblemController extends BaseController {
         problemDto.setSource(problemEditDto.getSource());
 
         problemDto.setTimeLimit(problemEditDto.getTimeLimit());
-        problemDto.setJavaTimeLimit(problemEditDto.getJavaTimeLimit());
         problemDto.setMemoryLimit(problemEditDto.getMemoryLimit());
-        problemDto.setJavaMemoryLimit(problemEditDto.getJavaMemoryLimit());
         problemDto.setOutputLimit(problemEditDto.getOutputLimit());
         problemDto.setIsSpj(problemEditDto.getIsSpj());
         problemDto.setType(problemEditDto.getType());
@@ -291,7 +286,7 @@ public class ProblemController extends BaseController {
   @LoginPermit(AuthenticationType.ADMIN)
   public @ResponseBody Map<String, Object> uploadProblemDataFile(
       @PathVariable("problemId") String sProblemId,
-      @RequestParam(value = "uploadFile", required = true) MultipartFile[] files) {
+      @RequestParam(value = "uploadFile") MultipartFile[] files) {
     Map<String, Object> json = new HashMap<>();
     try {
       if (!sProblemId.equals("new")) {

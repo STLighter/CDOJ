@@ -12,7 +12,13 @@ import cn.edu.uestc.acmicpc.util.exception.AppExceptionUtil;
 import cn.edu.uestc.acmicpc.util.helper.ArrayUtil;
 import cn.edu.uestc.acmicpc.util.helper.DatabaseUtil;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
-
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
@@ -22,28 +28,19 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.springframework.stereotype.Repository;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 /**
  * Global DAO implementation.
  * <p>
  * <strong>WARN</strong>: This class is only a abstract class, please create
  * subclass by overriding {@code getReference} method.
  *
- * @param <E>
- *          entity type
+ * @param <E> entity type
  */
 @SuppressWarnings("deprecation")
 @Repository
 public abstract class DaoImpl<E extends Serializable> extends BaseDao implements Dao<E> {
 
-  private static final Logger LOGGER = LogManager.getLogger(DaoImpl.class);
+  private static final Logger logger = LogManager.getLogger(DaoImpl.class);
 
   @Override
   public void addOrUpdate(E entity) throws AppException {
@@ -61,8 +58,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
   /**
    * Build HQL with class name.
    *
-   * @param condition
-   *          DB condition entity.
+   * @param condition DB condition entity.
    * @return HQL with class name.
    */
   @Deprecated
@@ -74,8 +70,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
   /**
    * Build HQL with class name, and the condition's order is considered..
    *
-   * @param condition
-   *          DB condition entity.
+   * @param condition DB condition entity.
    * @return HQL with class name.
    */
   @Deprecated
@@ -112,7 +107,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
           + hqlCondition;
       return (Long) getQuery(hql, null).uniqueResult();
     } catch (HibernateException e) {
-      LOGGER.error(e);
+      logger.error(e);
       throw new AppException("Invoke count method error.");
     }
   }
@@ -133,7 +128,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
     try {
       getSession().save(entity);
     } catch (HibernateException e) {
-      LOGGER.error(e);
+      logger.error(e.getCause());
       throw new AppException("Invoke add method error.");
     }
   }
@@ -147,7 +142,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
       }
       return (E) getSession().get(getReferenceClass(), key);
     } catch (HibernateException e) {
-      LOGGER.error(e);
+      logger.error(e);
       throw new AppException("Invoke get method error.");
     }
   }
@@ -156,10 +151,11 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
     try {
       getSession().update(entity);
     } catch (HibernateException e) {
-      LOGGER.error(e);
+      logger.error(e);
       throw new AppException("Invoke update method error.");
     }
   }
+  
 
   @Override
   @Deprecated
@@ -167,7 +163,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
     try {
       return getQuery(hql, null).list();
     } catch (HibernateException e) {
-      LOGGER.error(e);
+      logger.error(e);
       throw new AppException("Invoke findAll method error.");
     }
   }
@@ -185,7 +181,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
       }
       return getQuery(hql, pageInfo).list();
     } catch (HibernateException e) {
-      LOGGER.error(e);
+      logger.error(e);
       throw new AppException("Invoke findAll method error.");
     }
   }
@@ -204,7 +200,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
       }
       return getQuery(hql, condition.getPageInfo()).list();
     } catch (HibernateException e) {
-      LOGGER.error(e + "\nHQL = " + hql);
+      logger.error("HQL = " + hql, e);
       throw new AppException("Invoke findAll method error.");
     }
   }
@@ -224,7 +220,8 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
 
   @Override
   @Deprecated
-  public Object getEntityByUniqueField(String fieldName, Object value,
+  public Object getEntityByUniqueField(
+      String fieldName, Object value,
       String propertyName,
       boolean forceUnique) throws AppException {
     Condition condition = new Condition();
@@ -254,7 +251,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
   @Override
   @Deprecated
   public void updateEntitiesByCondition(Map<String, Object> properties,
-      Condition condition)
+                                        Condition condition)
       throws AppException {
     if (properties.isEmpty()) {
       return;
@@ -276,6 +273,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
     try {
       getQuery(hql, null).executeUpdate();
     } catch (Exception e) {
+      logger.error(e);
       throw new AppException("Error while execute database query.");
     }
   }
@@ -295,6 +293,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
     try {
       getQuery(hql, null).executeUpdate();
     } catch (Exception e) {
+      logger.error(e);
       throw new AppException("Error while execute database query.");
     }
   }
@@ -304,7 +303,8 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
    */
   @Override
   @Deprecated
-  public void updateEntitiesByField(Map<String, Object> properties,
+  public void updateEntitiesByField(
+      Map<String, Object> properties,
       String field, String values) throws AppException {
     if (properties.isEmpty()) {
       return;
@@ -336,13 +336,15 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
     try {
       getQuery(hql, null).executeUpdate();
     } catch (Exception e) {
+      logger.error("HQL: " + hql, e);
       throw new AppException("Error while execute database query.");
     }
   }
 
   @Override
   @Deprecated
-  public void updateEntitiesByField(String propertyField, Object propertyValue,
+  public void updateEntitiesByField(
+      String propertyField, Object propertyValue,
       String field, String values) throws AppException {
     Map<String, Object> properties = new HashMap<>();
     properties.put(propertyField, propertyValue);
@@ -351,7 +353,8 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
 
   @Override
   @Deprecated
-  public void updateEntitiesByCondition(String propertyField, Object propertyValue,
+  public void updateEntitiesByCondition(
+      String propertyField, Object propertyValue,
       Condition condition) throws AppException {
     Map<String, Object> properties = new HashMap<>();
     properties.put(propertyField, propertyValue);
@@ -375,16 +378,25 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
 
   @Override
   @Deprecated
-  public <T extends BaseDto<E>> List<T> findAll(Class<T> clazz,
+  public <T extends BaseDto<E>> List<T> findAll(
+      Class<T> clazz,
       BaseDtoBuilder<T> builder,
-      String hql, PageInfo pageInfo) throws AppException {
-    List<T> list = new ArrayList<>();
-    AppExceptionUtil.assertTrue(clazz.isAnnotationPresent(Fields.class));
+      String hql,
+      PageInfo pageInfo) throws AppException {
+    AppExceptionUtil.assertTrue(
+        clazz.isAnnotationPresent(Fields.class),
+        "The class " + clazz.getCanonicalName() + "is not annotated with @Fields");
     String[] fields = clazz.getAnnotation(Fields.class).value();
     // TODO wrap the field by ``
     String queryField = ArrayUtil.join(fields, ",");
     List<?> result = findAll(queryField, hql, pageInfo);
-    for (Iterator<?> iterator = result.iterator(); iterator.hasNext();) {
+    return aggregateResults(result, fields, builder);
+  }
+
+  private <T extends BaseDto<E>> List<T> aggregateResults(
+      List<?> result, String[] fields, BaseDtoBuilder<T> builder) {
+    List<T> list = new ArrayList<>();
+    for (Iterator<?> iterator = result.iterator(); iterator.hasNext(); ) {
       Object[] entity = (Object[]) iterator.next();
       Map<String, Object> properties = new HashMap<>();
       for (int i = 0; i < fields.length; i++) {
@@ -397,31 +409,25 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
 
   @Override
   @Deprecated
-  public <T extends BaseDto<E>> List<T> findAll(Class<T> clazz,
-      BaseDtoBuilder<T> builder,
+  public <T extends BaseDto<E>> List<T> findAll(
+      Class<T> clazz, BaseDtoBuilder<T> builder,
       Condition condition) throws AppException {
-    List<T> list = new ArrayList<>();
-    AppExceptionUtil.assertTrue(clazz.isAnnotationPresent(Fields.class));
+    AppExceptionUtil.assertTrue(clazz.isAnnotationPresent(Fields.class),
+                                "the class " + clazz + " is not annotated with Fields.");
     String[] fields = clazz.getAnnotation(Fields.class).value();
     // TODO wrap the field by ``
     String queryField = ArrayUtil.join(fields, ",");
     List<?> result = findAll(queryField, condition);
-    for (Iterator<?> iterator = result.iterator(); iterator.hasNext();) {
-      Object[] entity = (Object[]) iterator.next();
-      Map<String, Object> properties = new HashMap<>();
-      for (int i = 0; i < fields.length; i++) {
-        properties.put(fields[i], entity[i]);
-      }
-      list.add(builder.build(properties));
-    }
-    return list;
+    return aggregateResults(result, fields, builder);
   }
 
   @Override
   @Deprecated
-  public <T extends BaseDto<E>> T getDtoByUniqueField(Class<T> clazz,
+  public <T extends BaseDto<E>> T getDtoByUniqueField(
+      Class<T> clazz,
       BaseDtoBuilder<T> builder,
-      String field, Object value) throws AppException {
+      String field,
+      Object value) throws AppException {
     Condition condition = new Condition();
     if (value instanceof String) {
       condition.addEntry(field, ConditionType.STRING_EQUALS, value);
@@ -440,7 +446,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
 
   @Override
   public void increment(String incrementField,
-      String field, String values) throws AppException {
+                        String field, String values) throws AppException {
     StringBuilder stringBuilder = new StringBuilder();
     // TODO wrap the field by ``
     stringBuilder.append("update ").append(getReferenceClass().getSimpleName())
@@ -450,6 +456,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
     String hql = stringBuilder.toString();
     getQuery(hql, null).executeUpdate();
   }
+
 
   @SuppressWarnings("unchecked")
   @Override
@@ -495,6 +502,7 @@ public abstract class DaoImpl<E extends Serializable> extends BaseDao implements
   @Override
   public Long customCount(DetachedCriteria criteria) throws AppException {
     Criteria executableCriteria = criteria.getExecutableCriteria(getSession());
+    //logger.info( "[customCount]: " + criteria.toString());
     return (Long) executableCriteria.uniqueResult();
   }
 }

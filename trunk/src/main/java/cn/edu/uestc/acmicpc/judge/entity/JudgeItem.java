@@ -6,14 +6,13 @@ import cn.edu.uestc.acmicpc.service.iface.ProblemService;
 import cn.edu.uestc.acmicpc.service.iface.StatusService;
 import cn.edu.uestc.acmicpc.service.iface.UserService;
 import cn.edu.uestc.acmicpc.util.exception.AppException;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Judge item for single problem.
@@ -24,6 +23,7 @@ public class JudgeItem {
 
   private StatusDto status;
   private String compileInfo;
+  private String SourceNameWithoutExtension;
   private final CompileInfoService compileInfoService;
   private final StatusService statusService;
   private final UserService userService;
@@ -39,6 +39,7 @@ public class JudgeItem {
     this.statusService = statusService;
     this.userService = userService;
     this.problemService = problemService;
+    this.SourceNameWithoutExtension = UUID.randomUUID().toString();
   }
 
   public void setStatus(StatusDto status) {
@@ -57,15 +58,22 @@ public class JudgeItem {
     return compileInfo;
   }
 
+  public void setSourceNameWithoutExtension(String SourceNameWithoutExtension){
+     this.SourceNameWithoutExtension = SourceNameWithoutExtension;
+  }
+
+  public String getSourceNameWithoutExtension() {
+    return SourceNameWithoutExtension;
+  }
+
   public String getSourceName() {
-    return "Main" + status.getExtension();
+    return getSourceNameWithoutExtension() + status.getExtension();
   }
 
   /**
    * Update database for item.
    *
-   * @param updateStatus
-   *          if set {@code true}, update status' information.
+   * @param updateStatus if set {@code true}, update status' information.
    */
   public void update(boolean updateStatus) {
     try {

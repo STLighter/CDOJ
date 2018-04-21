@@ -2,7 +2,6 @@ package cn.edu.uestc.acmicpc.judge.core;
 
 import cn.edu.uestc.acmicpc.judge.entity.JudgeItem;
 import cn.edu.uestc.acmicpc.util.enums.OnlineJudgeReturnType;
-
 import java.util.Random;
 
 /**
@@ -23,7 +22,7 @@ public class FakeCore implements JudgeCore {
     } else {
       judgeResult.setResult(OnlineJudgeReturnType.getReturnType(2 + random.nextInt(14)));
       if (judgeResult.getResult() == OnlineJudgeReturnType.OJ_CE) {
-        judgeResult.setCompileInfo("Undefined token 'fuck'");
+        judgeResult.setCompileInfo("the compiler exits with exit_code: 127");
       }
     }
     return judgeResult;

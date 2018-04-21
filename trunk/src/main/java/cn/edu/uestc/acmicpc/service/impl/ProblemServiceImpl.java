@@ -11,14 +11,12 @@ import cn.edu.uestc.acmicpc.util.enums.ProblemType;
 import cn.edu.uestc.acmicpc.util.exception.AppException;
 import cn.edu.uestc.acmicpc.util.exception.AppExceptionUtil;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implementation for {@link ProblemService}.
@@ -109,14 +107,12 @@ public class ProblemServiceImpl extends AbstractService implements ProblemServic
     problem.setHint("");
     problem.setSource("");
     problem.setTimeLimit(1000);
-    problem.setMemoryLimit(65535);
+    problem.setMemoryLimit(64);
     problem.setSolved(0);
     problem.setTried(0);
     problem.setIsSpj(false);
     problem.setIsVisible(false);
-    problem.setOutputLimit(8192);
-    problem.setJavaTimeLimit(3000);
-    problem.setJavaMemoryLimit(65535);
+    problem.setOutputLimit(64);
     problem.setDataCount(0);
     problem.setDifficulty(1);
     problemDao.addOrUpdate(problem);
@@ -168,12 +164,6 @@ public class ProblemServiceImpl extends AbstractService implements ProblemServic
     }
     if (problemDto.getOutputLimit() != null) {
       problem.setOutputLimit(problemDto.getOutputLimit());
-    }
-    if (problemDto.getJavaTimeLimit() != null) {
-      problem.setJavaTimeLimit(problemDto.getJavaTimeLimit());
-    }
-    if (problemDto.getJavaMemoryLimit() != null) {
-      problem.setJavaMemoryLimit(problemDto.getJavaMemoryLimit());
     }
     if (problemDto.getDataCount() != null) {
       problem.setDataCount(problemDto.getDataCount());

@@ -6,21 +6,19 @@ import cn.edu.uestc.acmicpc.db.criteria.ArticleCriteria;
 import cn.edu.uestc.acmicpc.db.dto.field.ArticleFields;
 import cn.edu.uestc.acmicpc.db.dto.impl.ArticleDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.ContestDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.problem.ProblemDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
 import cn.edu.uestc.acmicpc.service.iface.ArticleService;
 import cn.edu.uestc.acmicpc.testing.PersistenceITTest;
 import cn.edu.uestc.acmicpc.util.enums.ArticleType;
 import cn.edu.uestc.acmicpc.util.exception.AppException;
 import cn.edu.uestc.acmicpc.util.helper.ArrayUtil;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
-
+import java.sql.Timestamp;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.sql.Timestamp;
-import java.util.List;
 
 /**
  * Integration test cases for
@@ -348,16 +346,15 @@ public class ArticleServiceITTest extends PersistenceITTest {
   @Test
   public void testUpdateArticle_isVisible() throws AppException {
     ArticleDto article = articleProvider.createArticle(testUserId);
-    Boolean isVisibleToUpdate = false;
     Boolean isVisibleOrigin = article.getIsVisible();
-    Assert.assertNotEquals(isVisibleOrigin, isVisibleToUpdate);
+    assertThat(isVisibleOrigin).isTrue();
     ArticleDto articleDto = ArticleDto.builder()
         .setArticleId(article.getArticleId())
-        .setIsVisible(isVisibleToUpdate)
+        .setIsVisible(false)
         .build();
     articleService.updateArticle(articleDto);
-    Assert.assertEquals(articleService.getArticleDto(article.getArticleId(),
-        ArticleFields.ALL_FIELDS).getIsVisible(), isVisibleToUpdate);
+    assertThat(articleService.getArticleDto(article.getArticleId(),
+        ArticleFields.ALL_FIELDS).getIsVisible()).isFalse();
   }
 
   @Test

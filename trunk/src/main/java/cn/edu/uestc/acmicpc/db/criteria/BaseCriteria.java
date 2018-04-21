@@ -4,24 +4,19 @@ import cn.edu.uestc.acmicpc.db.dto.FieldProjection;
 import cn.edu.uestc.acmicpc.db.dto.Fields;
 import cn.edu.uestc.acmicpc.util.exception.AppException;
 import cn.edu.uestc.acmicpc.util.exception.AppExceptionUtil;
-
+import com.google.common.collect.Sets;
+import java.util.Set;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 
-import com.google.common.collect.Sets;
-
-import java.util.Set;
-
 /**
  * We can use this class to get {@link DetachedCriteria} entity.
  *
- * @param <E>
- *          entity type
- * @param <D>
- *          data transfer object type
+ * @param <E> entity type
+ * @param <D> data transfer object type
  */
 public abstract class BaseCriteria<E, D> {
 
@@ -58,8 +53,8 @@ public abstract class BaseCriteria<E, D> {
 
   private Set<Fields> aliases;
 
-  protected BaseCriteria(Class<E> referenceClass,
-      Class<D> resultClass) {
+  protected BaseCriteria(
+      Class<E> referenceClass, Class<D> resultClass) {
     this.referenceClass = referenceClass;
     this.resultClass = resultClass;
     this.aliases = Sets.newHashSet();
@@ -131,5 +126,9 @@ public abstract class BaseCriteria<E, D> {
       }
     }
     return criteria;
+  }
+
+  static String wrapLike(String matchString) {
+    return "%" + matchString + "%";
   }
 }

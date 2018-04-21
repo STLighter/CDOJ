@@ -2,7 +2,6 @@ package cn.edu.uestc.acmicpc.db.entity;
 
 import cn.edu.uestc.acmicpc.util.annotation.KeyField;
 import cn.edu.uestc.acmicpc.util.enums.ProblemType;
-
 import java.io.Serializable;
 import java.util.Collection;
 import javax.persistence.Basic;
@@ -47,8 +46,7 @@ public class Problem implements Serializable {
         + ", sampleInput='" + sampleInput + '\'' + ", sampleOutput='" + sampleOutput + '\''
         + ", hint='" + hint + '\'' + ", source='" + source + '\'' + ", timeLimit=" + timeLimit
         + ", memoryLimit=" + memoryLimit + ", solved=" + solved + ", tried=" + tried + ", isSpj="
-        + isSpj + ", isVisible=" + isVisible + ", outputLimit=" + outputLimit + ", javaTimeLimit="
-        + javaTimeLimit + ", javaMemoryLimit=" + javaMemoryLimit + ", dataCount=" + dataCount
+        + isSpj + ", isVisible=" + isVisible + ", outputLimit=" + outputLimit + ", dataCount=" + dataCount
         + ", difficulty=" + difficulty + ", type=" + type.name() + '}';
   }
 
@@ -181,7 +179,7 @@ public class Problem implements Serializable {
     this.timeLimit = timeLimit;
   }
 
-  private Integer memoryLimit = 65535;
+  private Integer memoryLimit = 64;
 
   @Column(name = "memoryLimit", nullable = false, insertable = true, updatable = true, length = 10,
       precision = 0)
@@ -246,7 +244,7 @@ public class Problem implements Serializable {
     isVisible = visible;
   }
 
-  private Integer outputLimit = 8000;
+  private Integer outputLimit = 64;
 
   @Column(name = "outputLimit", nullable = false, insertable = true, updatable = true, length = 10,
       precision = 0)
@@ -257,32 +255,6 @@ public class Problem implements Serializable {
 
   public void setOutputLimit(Integer outputLimit) {
     this.outputLimit = outputLimit;
-  }
-
-  private Integer javaTimeLimit = 3000;
-
-  @Column(name = "javaTimeLimit", nullable = false, insertable = true, updatable = true,
-      length = 10, precision = 0)
-  @Basic
-  public Integer getJavaTimeLimit() {
-    return javaTimeLimit;
-  }
-
-  public void setJavaTimeLimit(Integer javaTimeLimit) {
-    this.javaTimeLimit = javaTimeLimit;
-  }
-
-  private Integer javaMemoryLimit = 65535;
-
-  @Column(name = "javaMemoryLimit", nullable = false, insertable = true, updatable = true,
-      length = 10, precision = 0)
-  @Basic
-  public Integer getJavaMemoryLimit() {
-    return javaMemoryLimit;
-  }
-
-  public void setJavaMemoryLimit(Integer javaMemoryLimit) {
-    this.javaMemoryLimit = javaMemoryLimit;
   }
 
   private Integer dataCount = 0;

@@ -1,6 +1,6 @@
 package cn.edu.uestc.acmicpc.web.oj.controller.picture;
 
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.service.iface.PictureService;
 import cn.edu.uestc.acmicpc.util.annotation.LoginPermit;
 import cn.edu.uestc.acmicpc.util.enums.AuthenticationType;
@@ -8,7 +8,11 @@ import cn.edu.uestc.acmicpc.util.exception.AppException;
 import cn.edu.uestc.acmicpc.web.dto.FileInformationDto;
 import cn.edu.uestc.acmicpc.web.dto.FileUploadDto;
 import cn.edu.uestc.acmicpc.web.oj.controller.base.BaseController;
-
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,12 +21,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import javax.servlet.http.HttpSession;
 
 /**
  * Controller for picture operation
@@ -43,7 +41,7 @@ public class PictureController extends BaseController {
   @RequestMapping(value = "uploadProblemPicture/{problemId}", method = RequestMethod.POST)
   @LoginPermit(AuthenticationType.ADMIN)
   public @ResponseBody Map<String, Object> uploadProblemPicture(
-      @RequestParam(value = "uploadFile", required = true) MultipartFile[] files,
+      @RequestParam(value = "uploadFile") MultipartFile[] files,
       @PathVariable("problemId") String problemId) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -71,7 +69,7 @@ public class PictureController extends BaseController {
   @RequestMapping(value = "uploadContestPicture/{contestId}", method = RequestMethod.POST)
   @LoginPermit(AuthenticationType.ADMIN)
   public @ResponseBody Map<String, Object> uploadContestPicture(
-      @RequestParam(value = "uploadFile", required = true) MultipartFile[] files,
+      @RequestParam(value = "uploadFile") MultipartFile[] files,
       @PathVariable("contestId") String contestId) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -99,7 +97,7 @@ public class PictureController extends BaseController {
   @RequestMapping(value = "uploadTrainingPicture/{trainingId}", method = RequestMethod.POST)
   @LoginPermit(AuthenticationType.ADMIN)
   public @ResponseBody Map<String, Object> uploadTrainingPicture(
-      @RequestParam(value = "uploadFile", required = true) MultipartFile[] files,
+      @RequestParam(value = "uploadFile") MultipartFile[] files,
       @PathVariable("trainingId") String trainingId) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -125,9 +123,9 @@ public class PictureController extends BaseController {
   }
 
   @RequestMapping(value = "uploadArticlePicture/{userName}/{articleId}", method = RequestMethod.POST)
-  @LoginPermit(NeedLogin = true)
+  @LoginPermit()
   public @ResponseBody Map<String, Object> uploadArticlePicture(
-      @RequestParam(value = "uploadFile", required = true) MultipartFile[] files,
+      @RequestParam(value = "uploadFile") MultipartFile[] files,
       @PathVariable("userName") String userName,
       @PathVariable("articleId") String articleId,
       HttpSession session) {

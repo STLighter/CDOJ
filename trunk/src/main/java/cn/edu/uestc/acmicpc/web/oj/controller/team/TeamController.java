@@ -5,12 +5,12 @@ import cn.edu.uestc.acmicpc.db.criteria.TeamCriteria;
 import cn.edu.uestc.acmicpc.db.dto.field.ContestFields;
 import cn.edu.uestc.acmicpc.db.dto.field.TeamFields;
 import cn.edu.uestc.acmicpc.db.dto.impl.ContestDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.MessageDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.TeamDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.contestteam.ContestTeamListDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.message.MessageDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.teamUser.TeamUserDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.teamUser.TeamUserListDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
 import cn.edu.uestc.acmicpc.service.iface.ContestService;
 import cn.edu.uestc.acmicpc.service.iface.ContestTeamService;
 import cn.edu.uestc.acmicpc.service.iface.MessageService;
@@ -25,23 +25,19 @@ import cn.edu.uestc.acmicpc.util.helper.StringUtil;
 import cn.edu.uestc.acmicpc.util.settings.Settings;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
 import cn.edu.uestc.acmicpc.web.oj.controller.base.BaseController;
-
+import com.google.common.collect.Lists;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.google.common.collect.Lists;
-
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/team")
@@ -56,9 +52,14 @@ public class TeamController extends BaseController {
   private final Settings settings;
 
   @Autowired
-  public TeamController(TeamService teamService, UserService userService,
-      TeamUserService teamUserService, MessageService messageService,
-      ContestTeamService contestTeamService, ContestService contestService, Settings settings) {
+  public TeamController(
+      TeamService teamService,
+      UserService userService,
+      TeamUserService teamUserService,
+      MessageService messageService,
+      ContestTeamService contestTeamService,
+      ContestService contestService,
+      Settings settings) {
     this.teamService = teamService;
     this.userService = userService;
     this.teamUserService = teamUserService;
@@ -69,9 +70,10 @@ public class TeamController extends BaseController {
   }
 
   @RequestMapping("typeAHeadItem/{teamName}")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> typeAHeadItem(@PathVariable("teamName") String teamName,
-      HttpSession session) {
+  @LoginPermit()
+  @ResponseBody
+  public Map<String, Object> typeAHeadItem(@PathVariable("teamName") String teamName,
+                                           HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
       Integer teamId = teamService.getTeamDtoByTeamName(teamName, TeamFields.SUMMARY_FIELDS)
@@ -93,8 +95,9 @@ public class TeamController extends BaseController {
   }
 
   @RequestMapping("typeAHeadSearch")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> typeAHeadSearch(@RequestBody TeamCriteria criteria) {
+  @LoginPermit()
+  @ResponseBody
+  public Map<String, Object> typeAHeadSearch(@RequestBody TeamCriteria criteria) {
     Map<String, Object> json = new HashMap<>();
     try {
       if (criteria.teamName == null) {
@@ -113,7 +116,7 @@ public class TeamController extends BaseController {
   }
 
   private List<TeamDto> getTeamListDto(TeamCriteria criteria, PageInfo pageInfo,
-      HttpSession session) throws AppException {
+                                       HttpSession session) throws AppException {
     List<TeamDto> teamList = teamService.getTeams(criteria, pageInfo,
         TeamFields.FIELDS_FOR_LIST_PAGE);
 
@@ -138,7 +141,9 @@ public class TeamController extends BaseController {
 
   @RequestMapping("search")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> search(@RequestBody TeamCriteria criteria,
+  @ResponseBody
+  public Map<String, Object> search(
+      @RequestBody TeamCriteria criteria,
       HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -168,8 +173,10 @@ public class TeamController extends BaseController {
   }
 
   @RequestMapping("changeAllowState/{userId}/{teamId}/{value}")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> changeAllowState(@PathVariable("userId") Integer userId,
+  @LoginPermit()
+  @ResponseBody
+  public Map<String, Object> changeAllowState(
+      @PathVariable("userId") Integer userId,
       @PathVariable("teamId") Integer teamId,
       @PathVariable("value") Boolean value,
       HttpSession session) {
@@ -206,9 +213,9 @@ public class TeamController extends BaseController {
   }
 
   @RequestMapping("deleteTeam")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> deleteTeam(@RequestBody TeamDto teamEditDto,
-      HttpSession session) {
+  @LoginPermit()
+  @ResponseBody
+  public Map<String, Object> deleteTeam(@RequestBody TeamDto teamEditDto, HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
       TeamDto teamDto = teamService.getTeamDtoByTeamId(teamEditDto.getTeamId(),
@@ -237,7 +244,7 @@ public class TeamController extends BaseController {
                 "Team " + teamDto.getTeamName() + " has been fallen out by "
                     + StringUtil.getAtLink(currentUser.getUserName()) + ".")
             .build()
-            );
+        );
       }
       teamService.deleteTeam(teamDto);
       json.put("result", "success");
@@ -249,9 +256,11 @@ public class TeamController extends BaseController {
   }
 
   @RequestMapping("createTeam")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> createTeam(@RequestBody TeamDto teamEditDto,
-      HttpSession session) {
+  @LoginPermit()
+  public
+  @ResponseBody
+  Map<String, Object> createTeam(
+      @RequestBody TeamDto teamEditDto, HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
       AppExceptionUtil.assertNotNull(teamEditDto.getTeamName(), "Please input a valid team name.");
@@ -280,9 +289,9 @@ public class TeamController extends BaseController {
   }
 
   @RequestMapping("removeMember")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> removeMember(@RequestBody TeamDto teamEditDto,
-      HttpSession session) {
+  @LoginPermit()
+  @ResponseBody
+  public Map<String, Object> removeMember(@RequestBody TeamDto teamEditDto, HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
       TeamDto teamDto = teamService.getTeamDtoByTeamId(teamEditDto.getTeamId(),
@@ -346,9 +355,10 @@ public class TeamController extends BaseController {
   }
 
   @RequestMapping("addMember")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> addMember(@RequestBody TeamDto teamEditDto,
-      HttpSession session) {
+  @LoginPermit()
+  @ResponseBody
+  public Map<String, Object> addMember(
+      @RequestBody TeamDto teamEditDto, HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
       TeamDto teamDto = teamService.getTeamDtoByTeamId(teamEditDto.getTeamId(),

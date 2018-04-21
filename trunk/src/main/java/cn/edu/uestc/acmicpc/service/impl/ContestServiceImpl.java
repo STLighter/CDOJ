@@ -10,24 +10,23 @@ import cn.edu.uestc.acmicpc.util.enums.ContestType;
 import cn.edu.uestc.acmicpc.util.exception.AppException;
 import cn.edu.uestc.acmicpc.util.exception.AppExceptionUtil;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
-
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 @Service
 @Primary
 @Transactional(rollbackFor = Exception.class)
 public class ContestServiceImpl extends AbstractService implements ContestService {
+  private static final Logger logger = Logger.getLogger(ContestServiceImpl.class);
 
   // This group of fields make up all progress information of a contest.
   private final static Set<ContestFields> CONTEST_STATUS_FIELDS = ImmutableSet.of(
@@ -56,7 +55,8 @@ public class ContestServiceImpl extends AbstractService implements ContestServic
     AppExceptionUtil.assertNotNull(contestId);
     ContestCriteria criteria = new ContestCriteria();
     criteria.contestId = contestId;
-    return updateContestDto(contestDao.getUniqueDto(criteria, fields), fields);
+    ContestDto contest = contestDao.getUniqueDto(criteria, fields);
+    return updateContestDto(contest, fields);
   }
 
   @Override

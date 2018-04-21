@@ -3,7 +3,7 @@ package cn.edu.uestc.acmicpc.web.oj.controller.article;
 import cn.edu.uestc.acmicpc.db.criteria.ArticleCriteria;
 import cn.edu.uestc.acmicpc.db.dto.field.ArticleFields;
 import cn.edu.uestc.acmicpc.db.dto.impl.ArticleDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.service.iface.ArticleService;
 import cn.edu.uestc.acmicpc.service.iface.PictureService;
 import cn.edu.uestc.acmicpc.util.annotation.JsonMap;
@@ -17,7 +17,13 @@ import cn.edu.uestc.acmicpc.util.helper.StringUtil;
 import cn.edu.uestc.acmicpc.util.settings.Settings;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
 import cn.edu.uestc.acmicpc.web.oj.controller.base.BaseController;
-
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpSession;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,17 +31,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import javax.servlet.http.HttpSession;
-
 @Controller
 @RequestMapping("/article")
 public class ArticleController extends BaseController {
-
+  private static final Logger logger = Logger.getLogger(ArticleController.class);
   private final ArticleService articleService;
   private final PictureService pictureService;
   private final Settings settings;
@@ -159,7 +158,7 @@ public class ArticleController extends BaseController {
   }
 
   @RequestMapping("edit")
-  @LoginPermit(NeedLogin = true)
+  @LoginPermit()
   public @ResponseBody Map<String, Object> edit(
       @JsonMap("articleEditDto") ArticleDto articleEditDto,
       @JsonMap("action") String action,
@@ -181,7 +180,8 @@ public class ArticleController extends BaseController {
         throw new FieldException("title", "Please enter a validate title.");
       }
       // Check userId
-      if (currentUser.getUserId().equals(articleEditDto.getUserId())) {
+      logger.info( "UserId is " + currentUser.getUserId() );
+      if (currentUser.getUserId().equals(articleEditDto.getUserId()) == false && currentUser.getType() != 1 && action.equals("new") == false  ) {
         throw new AppException("Permission denied");
       }
     }

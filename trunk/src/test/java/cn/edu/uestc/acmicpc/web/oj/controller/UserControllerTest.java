@@ -1,13 +1,5 @@
 package cn.edu.uestc.acmicpc.web.oj.controller;
 
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserLoginDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserRegisterDto;
-import cn.edu.uestc.acmicpc.testing.ControllerTest;
-import cn.edu.uestc.acmicpc.util.exception.AppException;
-import cn.edu.uestc.acmicpc.util.helper.StringUtil;
-import cn.edu.uestc.acmicpc.web.oj.controller.user.UserController;
-
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -17,15 +9,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
+import cn.edu.uestc.acmicpc.service.testing.UserProvider;
+import cn.edu.uestc.acmicpc.testing.ControllerTest;
+import cn.edu.uestc.acmicpc.util.exception.AppException;
+import cn.edu.uestc.acmicpc.util.helper.StringUtil;
+import cn.edu.uestc.acmicpc.web.oj.controller.user.UserController;
+import com.alibaba.fastjson.JSON;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpSession;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import com.alibaba.fastjson.JSON;
-
-import java.util.UUID;
 
 /**
  * Mock test for {@link UserController}.
@@ -51,7 +47,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_successful() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("admin")
         .setPassword(PASSWORD_ENCODED)
         .build();
@@ -71,8 +67,9 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidUserName_null() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName(null)
+        .setPassword(StringUtil.encodeSHA1("password"))
         .build();
     mockMvc.perform(post(URL_LOGIN)
         .contentType(APPLICATION_JSON_UTF8)
@@ -89,8 +86,9 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidUserName_empty() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("")
+        .setPassword(StringUtil.encodeSHA1("password"))
         .build();
     mockMvc.perform(post(URL_LOGIN)
         .contentType(APPLICATION_JSON_UTF8)
@@ -108,8 +106,9 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidUserName_tooShort() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName(StringUtil.repeat("a", 3))
+        .setPassword(StringUtil.encodeSHA1("password"))
         .build();
     mockMvc.perform(post(URL_LOGIN)
         .contentType(APPLICATION_JSON_UTF8)
@@ -127,8 +126,9 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidUserName_tooLong() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName(StringUtil.repeat("a", 25))
+        .setPassword(StringUtil.encodeSHA1("password"))
         .build();
     mockMvc.perform(post(URL_LOGIN)
         .contentType(APPLICATION_JSON_UTF8)
@@ -146,8 +146,9 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidUserName_invalid() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("%$#@5%")
+        .setPassword(StringUtil.encodeSHA1("password"))
         .build();
     mockMvc.perform(post(URL_LOGIN)
         .contentType(APPLICATION_JSON_UTF8)
@@ -165,7 +166,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidPassword_null() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("admin")
         .setPassword(null)
         .build();
@@ -184,7 +185,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidPassword_empty() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("admin")
         .setPassword("")
         .build();
@@ -203,7 +204,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidPassword_tooShort() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("admin")
         .setPassword(StringUtil.repeat("a", 5))
         .build();
@@ -222,7 +223,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_invalidPassword_tooLong() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("admin")
         .setPassword(StringUtil.repeat("a", 41))
         .build();
@@ -241,7 +242,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_failed_wrongUserNameOrPassword() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("admin")
         .setPassword(StringUtil.encodeSHA1("wrongPassword"))
         .build();
@@ -266,7 +267,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_failed_bothUserNameAndPassword_null() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName(null)
         .setPassword(null)
         .build();
@@ -288,7 +289,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_failed_bothUserNameAndPassword_empty() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("")
         .setPassword("")
         .build();
@@ -310,7 +311,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testLogin_failed_serviceError() throws Exception {
-    UserLoginDto userLoginDto = UserLoginDto.builder()
+    UserDto userLoginDto = UserDto.builder()
         .setUserName("admin")
         .setPassword(PASSWORD_ENCODED)
         .build();
@@ -339,7 +340,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_successfully() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder().build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
     when(userService.getUserDtoByUserName(userRegisterDto.getUserName())).thenReturn(null)
         .thenReturn(mock(UserDto.class));
     when(userService.getUserDtoByEmail(userRegisterDto.getEmail())).thenReturn(null);
@@ -354,9 +355,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_userName_null() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setUserName(null)
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setUserName(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -370,9 +370,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_userName_empty() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setUserName("")
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setUserName("");
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -387,9 +386,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_userName_whiteSpaces() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setUserName(StringUtil.repeat(" ", 10))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setUserName(StringUtil.repeat(" ", 10));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -404,9 +402,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_userName_tooShort() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setUserName(StringUtil.repeat("a", 3))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setUserName(StringUtil.repeat("a", 3));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -421,9 +418,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_userName_tooLong() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setUserName(StringUtil.repeat("a", 25))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setUserName(StringUtil.repeat("a", 25));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -438,9 +434,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_userName_invalid() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setUserName("#userName")
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setUserName("#userName");
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -455,9 +450,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_password_null() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPassword(null)
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPassword(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -465,15 +459,14 @@ public class UserControllerTest extends ControllerTest {
         .andExpect(jsonPath("$.result", is("field_error")))
         .andExpect(jsonPath("$.field", hasSize(1)))
         .andExpect(jsonPath("$.field[0].field", is("password")))
-        .andExpect(jsonPath("$.field[0].objectName", is("password")))
+        .andExpect(jsonPath("$.field[0].objectName", is("userRegisterDto")))
         .andExpect(jsonPath("$.field[0].defaultMessage", is("Please enter your password.")));
   }
 
   @Test
   public void testRegister_failed_password_empty() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPassword("")
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPassword("");
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -487,9 +480,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_password_tooShort() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPassword(StringUtil.repeat("a", 5))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPassword(StringUtil.repeat("a", 5));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -503,9 +495,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_password_tooLong() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPassword(StringUtil.repeat("a", 41))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPassword(StringUtil.repeat("a", 41));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -519,9 +510,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_passwordRepeat_null() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPasswordRepeat(null)
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPasswordRepeat(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -535,9 +525,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_passwordRepeat_empty() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPasswordRepeat("")
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPasswordRepeat("");
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -551,9 +540,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_passwordRepeat_tooShort() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPasswordRepeat(StringUtil.repeat("a", 5))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPasswordRepeat(StringUtil.repeat("a", 5));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -567,9 +555,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_passwordRepeat_tooLong() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPasswordRepeat(StringUtil.repeat("a", 41))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPasswordRepeat(StringUtil.repeat("a", 41));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -583,10 +570,9 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_password_different() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setPassword(StringUtil.encodeSHA1("12345678"))
-        .setPasswordRepeat(StringUtil.encodeSHA1("123456789"))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setPassword(StringUtil.encodeSHA1("12345678"));
+    userRegisterDto.setPasswordRepeat(StringUtil.encodeSHA1("123456789"));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -600,9 +586,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_nickName_null() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setNickName(null)
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setNickName(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -616,9 +601,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_nickName_empty() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setNickName("")
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setNickName("");
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -632,9 +616,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_nickName_whiteSpaces() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setNickName(StringUtil.repeat(" ", 10))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setNickName(StringUtil.repeat(" ", 10));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -649,9 +632,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_nickName_tooShort() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setNickName(StringUtil.repeat("a", 1))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setNickName(StringUtil.repeat("a", 1));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -665,9 +647,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_nickName_tooLong() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setNickName(StringUtil.repeat("a", 21))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setNickName(StringUtil.repeat("a", 21));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -681,9 +662,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_email_null() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setEmail(null)
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setEmail(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -696,10 +676,9 @@ public class UserControllerTest extends ControllerTest {
             is("Please enter a valid email address.")));
   }
 
-  public void testRegister_failed_email_invalid(String email) throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setEmail(email)
-        .build();
+  private void testRegister_failed_email_invalid(String email) throws Exception {
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setEmail(email);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -749,9 +728,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_school_null() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setSchool(null)
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setSchool(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -765,9 +743,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_school_empty() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setSchool("")
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setSchool("");
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -781,9 +758,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_school_tooShort() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setSchool(StringUtil.repeat("a", 0))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setSchool(StringUtil.repeat("a", 0));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -797,9 +773,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_school_tooLong() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setSchool(StringUtil.repeat("a", 101))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setSchool(StringUtil.repeat("a", 101));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -813,9 +788,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_departmentId_null() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setDepartmentId(null)
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setDepartmentId(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -829,9 +803,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_studentId_null() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setStudentId(null)
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setStudentId(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -845,9 +818,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_studentId_empty() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setStudentId("")
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setStudentId("");
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -861,9 +833,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_studentId_tooShort() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setStudentId(StringUtil.repeat("a", 0))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setStudentId(StringUtil.repeat("a", 0));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -877,9 +848,8 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_studentId_tooLong() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder()
-        .setStudentId(StringUtil.repeat("a", 21))
-        .build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
+    userRegisterDto.setStudentId(StringUtil.repeat("a", 21));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
         .content(JSON.toJSONBytes(userRegisterDto)))
@@ -893,7 +863,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_usedUserName() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder().build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
     when(userService.getUserDtoByUserName(userRegisterDto.getUserName()))
         .thenReturn(mock(UserDto.class));
     mockMvc.perform(post(URL_REGISTER)
@@ -909,7 +879,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_usedEmail() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder().build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
     when(userService.getUserDtoByEmail(userRegisterDto.getEmail())).thenReturn(mock(UserDto.class));
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
@@ -924,7 +894,7 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testRegister_failed_departmentNotFound() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder().build();
+    UserDto userRegisterDto = UserProvider.createUnpersistedUser();
     when(departmentService.getDepartmentName(userRegisterDto.getDepartmentId())).thenReturn(null);
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
@@ -940,19 +910,19 @@ public class UserControllerTest extends ControllerTest {
 
   @Test
   public void testUser_register_login_logout() throws Exception {
-    UserRegisterDto userRegisterDto = UserRegisterDto.builder().build();
-    UserLoginDto userLoginDto = UserLoginDto.builder().build();
-    UserDto userDto = UserDto.builder()
-        .setPassword(userLoginDto.getPassword())
+    UserDto userDto = UserProvider.createUnpersistedUser();
+    UserDto userLoginDto = UserDto.builder()
+        .setUserName(userDto.getUserName())
+        .setPassword(userDto.getPassword())
         .build();
-    when(userService.getUserDtoByUserName(userRegisterDto.getUserName()))
+    when(userService.getUserDtoByUserName(userDto.getUserName()))
         .thenReturn(null).thenReturn(userDto);
-    when(userService.getUserDtoByEmail(userRegisterDto.getEmail())).thenReturn(null);
-    when(departmentService.getDepartmentName(userRegisterDto.getDepartmentId()))
+    when(userService.getUserDtoByEmail(userDto.getEmail())).thenReturn(null);
+    when(departmentService.getDepartmentName(userDto.getDepartmentId()))
         .thenReturn("department");
     mockMvc.perform(post(URL_REGISTER)
         .contentType(APPLICATION_JSON_UTF8)
-        .content(JSON.toJSONBytes(userRegisterDto))
+        .content(JSON.toJSONBytes(userDto))
         .session(session))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.result", is("success")));

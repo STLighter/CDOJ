@@ -1,7 +1,7 @@
 package cn.edu.uestc.acmicpc.service.impl;
 
 import cn.edu.uestc.acmicpc.db.dto.impl.ContestDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.contestproblem.ContestProblemDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.ContestProblemDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.problem.ProblemDto;
 import cn.edu.uestc.acmicpc.service.iface.ContestImporterService;
 import cn.edu.uestc.acmicpc.service.iface.ContestProblemService;
@@ -19,10 +19,6 @@ import cn.edu.uestc.acmicpc.util.settings.Settings;
 import cn.edu.uestc.acmicpc.web.dto.FileInformationDto;
 import cn.edu.uestc.acmicpc.web.xml.XmlNode;
 import cn.edu.uestc.acmicpc.web.xml.XmlParser;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.Timestamp;
@@ -33,6 +29,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipFile;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class ContestImporterServiceImpl implements ContestImporterService {
@@ -59,7 +57,7 @@ public class ContestImporterServiceImpl implements ContestImporterService {
   };
 
   private static final String[] problemAdditionalInfoTagNames = new String[]{
-      "javaTimeLimit", "javaMemoryLimit", "hint", "specialJudge"
+      "hint", "specialJudge"
   };
 
   private static final Map<String, String> problemTagsSetter;
@@ -73,9 +71,7 @@ public class ContestImporterServiceImpl implements ContestImporterService {
     problemTagsSetter.put("sampleInput", "setSampleInput");
     problemTagsSetter.put("sampleOutput", "setSampleOutput");
     problemTagsSetter.put("timeLimit", "setTimeLimit");
-    problemTagsSetter.put("javaTimeLimit", "setJavaTimeLimit");
     problemTagsSetter.put("memoryLimit", "setMemoryLimit");
-    problemTagsSetter.put("javaMemoryLimit", "setJavaMemoryLimit");
     problemTagsSetter.put("source", "setSource");
     problemTagsSetter.put("specialJudge", "setIsSpj");
     problemTagsSetter.put("hint", "setHint");
@@ -83,8 +79,8 @@ public class ContestImporterServiceImpl implements ContestImporterService {
 
   @Autowired
   public ContestImporterServiceImpl(Settings settings, FileService fileService,
-      ProblemService problemService, ContestService contestService,
-      ContestProblemService contestProblemService) {
+                                    ProblemService problemService, ContestService contestService,
+                                    ContestProblemService contestProblemService) {
     this.settings = settings;
     this.fileService = fileService;
     this.problemService = problemService;
@@ -281,12 +277,6 @@ public class ContestImporterServiceImpl implements ContestImporterService {
     problemDto.setIsVisible(false);
     if (additionalTagSet.contains("specialJudge")) {
       problemDto.setIsSpj(false);
-    }
-    if (additionalTagSet.contains("javaTimeLimit")) {
-      problemDto.setJavaTimeLimit(problemDto.getTimeLimit() * 3);
-    }
-    if (additionalTagSet.contains("javaMemoryLimit")) {
-      problemDto.setJavaMemoryLimit(problemDto.getMemoryLimit());
     }
     return problemDto;
   }

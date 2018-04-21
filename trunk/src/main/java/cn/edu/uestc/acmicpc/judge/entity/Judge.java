@@ -3,14 +3,12 @@ package cn.edu.uestc.acmicpc.judge.entity;
 import cn.edu.uestc.acmicpc.judge.core.JudgeCore;
 import cn.edu.uestc.acmicpc.judge.core.JudgeResult;
 import cn.edu.uestc.acmicpc.util.enums.OnlineJudgeReturnType;
-
+import java.util.concurrent.BlockingQueue;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.BlockingQueue;
 
 /**
  * Problem judge component.
@@ -66,26 +64,44 @@ public class Judge implements Runnable {
   /**
    * Judge judgeItem by judge core.
    *
-   * @param judgeItem
-   *          judge item to be judged
+   * @param judgeItem judge item to be judged
    */
   void judge(JudgeItem judgeItem) {
     LOGGER.info("[" + judgeName + "] Start judging status#"
         + judgeItem.getStatus().getStatusId());
     try {
       int numberOfTestCase = judgeItem.getStatus().getDataCount();
+      if( judgeItem.getStatus().getExtension().equals(".java") == true ){
+        judgeItem.setSourceNameWithoutExtension("Main");      
+      }
       boolean isAccepted = true;
+      String tempPath = new String("");
       for (int currentCase = 1; isAccepted && currentCase <= numberOfTestCase; currentCase++) {
         judgeItem.getStatus().setCaseNumber(currentCase);
         JudgeResult result = judgeCore.judge(currentCase, judgeItem);
+        tempPath = result.gettempPath();
         isAccepted = updateJudgeItem(result, judgeItem);
       }
       if (isAccepted) {
         judgeItem.getStatus().setResultId(OnlineJudgeReturnType.OJ_AC.ordinal());
       }
+      if( tempPath.equals("") == false ){
+        try {
+          LOGGER.info( "[Delete Command] Judge completed, Run shell command " + new String[] { "/bin/sh", "-c", "rm -r -f" , tempPath , "*"  } );
+          try{
+            String pw = tempPath+"*";
+            Runtime.getRuntime().exec(new String[]{"/bin/sh","-c","rm -rf "+pw });
+            }catch(Exception ignored){
+                
+            }
+        } catch (Exception ignored) {
+          LOGGER.error( "Delete command error!" );
+        }
+      }
       judgeItem.update(true);
     } catch (Exception e) {
       LOGGER.error(e);
+      e.printStackTrace();
       judgeItem.getStatus().setResultId(OnlineJudgeReturnType.OJ_SE.ordinal());
       judgeItem.update(true);
     }
@@ -102,13 +118,17 @@ public class Judge implements Runnable {
     judgeItem.getStatus().setResultId(result.ordinal());
     Integer oldMemoryCost = judgeItem.getStatus().getMemoryCost();
     Integer currentMemoryCost = judgeResult.getMemoryCost();
-    judgeItem.getStatus().setMemoryCost(Math.max(currentMemoryCost, oldMemoryCost));
+    if (oldMemoryCost == null) {
+      judgeItem.getStatus().setMemoryCost(currentMemoryCost);
+    } else if (currentMemoryCost != null) {
+      judgeItem.getStatus().setMemoryCost(Math.max(currentMemoryCost, oldMemoryCost));
+    }
 
     Integer oldTimeCost = judgeItem.getStatus().getTimeCost();
     Integer currentTimeCost = judgeResult.getTimeCost();
     if (oldTimeCost == null) {
       judgeItem.getStatus().setTimeCost(currentTimeCost);
-    } else {
+    } else if (currentTimeCost != null) {
       judgeItem.getStatus().setTimeCost(Math.max(currentTimeCost, oldTimeCost));
     }
 

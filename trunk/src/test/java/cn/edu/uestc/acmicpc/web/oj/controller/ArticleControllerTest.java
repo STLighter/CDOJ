@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import cn.edu.uestc.acmicpc.db.criteria.ArticleCriteria;
 import cn.edu.uestc.acmicpc.db.dto.field.ArticleFields;
 import cn.edu.uestc.acmicpc.db.dto.impl.ArticleDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.testing.ControllerTest;
 import cn.edu.uestc.acmicpc.util.enums.ArticleType;
 import cn.edu.uestc.acmicpc.util.enums.AuthenticationType;
@@ -27,22 +27,19 @@ import cn.edu.uestc.acmicpc.util.exception.AppException;
 import cn.edu.uestc.acmicpc.util.helper.StringUtil;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
 import cn.edu.uestc.acmicpc.web.oj.controller.article.ArticleController;
-
-import org.mockito.ArgumentCaptor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpSession;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.alibaba.fastjson.JSON;
-
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockHttpSession;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 /**
  * Test cases for {@link ArticleController}.
@@ -385,17 +382,17 @@ public class ArticleControllerTest extends ControllerTest {
             .setArticleId(1)
             .setType(ArticleType.ARTICLE.ordinal())
             .build()
-        );
+    );
     when(articleService.getArticleDto(2, ArticleFields.ALL_FIELDS)).thenReturn(
         ArticleDto.builder()
             .setArticleId(2)
             .build()
-        );
+    );
     when(articleService.getArticleDto(3, ArticleFields.ALL_FIELDS)).thenReturn(
         ArticleDto.builder()
             .setArticleId(3)
             .build()
-        );
+    );
 
     mockMvc.perform(post("/article/changeNoticeOrder")
         .sessionAttr("currentUser", currentUserDto)
@@ -486,7 +483,7 @@ public class ArticleControllerTest extends ControllerTest {
         .build();
     when(articleService.getArticleDto(1, ArticleFields.ALL_FIELDS)).thenReturn(
         articleDtoInCommentEditTest
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -502,7 +499,7 @@ public class ArticleControllerTest extends ControllerTest {
         articleEditDto.getContent());
     Assert.assertEquals(articleDtoArgumentCaptor.getValue().getType(),
         Integer.valueOf(ArticleType.COMMENT.ordinal())
-        );
+    );
     Assert
         .assertEquals(articleDtoArgumentCaptor.getValue().getUserId(), currentUserDto.getUserId());
     Assert.assertEquals(articleDtoArgumentCaptor.getValue().getProblemId(),
@@ -524,7 +521,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setProblemId(1)
             .setType(ArticleType.COMMENT.ordinal())
             .build()
-        );
+    );
     String jsonDataString = JSON.toJSONString(jsonData);
     UserDto currentUserDto = UserDto.builder()
         .setType(AuthenticationType.NORMAL.ordinal())
@@ -532,7 +529,7 @@ public class ArticleControllerTest extends ControllerTest {
         .build();
     when(articleService.getArticleDto(1, ArticleFields.ALL_FIELDS)).thenReturn(
         articleDtoInCommentEditTest
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -553,7 +550,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setProblemId(1)
             .setType(ArticleType.COMMENT.ordinal())
             .build()
-        );
+    );
     String jsonDataString = JSON.toJSONString(jsonData);
     UserDto currentUserDto = UserDto.builder()
         .setType(AuthenticationType.NORMAL.ordinal())
@@ -561,7 +558,7 @@ public class ArticleControllerTest extends ControllerTest {
         .build();
     when(articleService.getArticleDto(1, ArticleFields.ALL_FIELDS)).thenReturn(
         articleDtoInCommentEditTest
-        );
+    );
     mockMvc
         .perform(post("/article/edit")
             .sessionAttr("currentUser", currentUserDto)
@@ -583,7 +580,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setProblemId(1)
             .setType(ArticleType.COMMENT.ordinal())
             .build()
-        );
+    );
     String jsonDataString = JSON.toJSONString(jsonData);
     UserDto currentUserDto = UserDto.builder()
         .setType(AuthenticationType.NORMAL.ordinal())
@@ -591,7 +588,7 @@ public class ArticleControllerTest extends ControllerTest {
         .build();
     when(articleService.getArticleDto(1, ArticleFields.ALL_FIELDS)).thenReturn(
         articleDtoInCommentEditTest
-        );
+    );
     mockMvc
         .perform(post("/article/edit")
             .sessionAttr("currentUser", currentUserDto)
@@ -614,7 +611,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setProblemId(1)
             .setType(ArticleType.COMMENT.ordinal())
             .build()
-        );
+    );
     String jsonDataString = JSON.toJSONString(jsonData);
     UserDto currentUserDto = UserDto.builder()
         .setType(AuthenticationType.NORMAL.ordinal())
@@ -622,7 +619,7 @@ public class ArticleControllerTest extends ControllerTest {
         .build();
     when(articleService.getArticleDto(1, ArticleFields.ALL_FIELDS)).thenReturn(
         articleDtoInCommentEditTest
-        );
+    );
     mockMvc
         .perform(post("/article/edit")
             .sessionAttr("currentUser", currentUserDto)
@@ -645,7 +642,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setProblemId(1)
             .setType(ArticleType.COMMENT.ordinal())
             .build()
-        );
+    );
     String jsonDataString = JSON.toJSONString(jsonData);
     UserDto currentUserDto = UserDto.builder()
         .setType(AuthenticationType.NORMAL.ordinal())
@@ -653,7 +650,7 @@ public class ArticleControllerTest extends ControllerTest {
         .build();
     when(articleService.getArticleDto(1, ArticleFields.ALL_FIELDS)).thenReturn(
         null
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -681,7 +678,7 @@ public class ArticleControllerTest extends ControllerTest {
     when(articleService.createNewArticle(currentUserDto.getUserId())).thenReturn(1);
     when(articleService.getArticleDto(1, ArticleFields.ALL_FIELDS)).thenReturn(
         articleDtoInCommentEditTest
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -710,7 +707,7 @@ public class ArticleControllerTest extends ControllerTest {
     when(articleService.createNewArticle(currentUserDto.getUserId())).thenReturn(1);
     when(articleService.getArticleDto(1, ArticleFields.ALL_FIELDS)).thenReturn(
         null
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -729,6 +726,7 @@ public class ArticleControllerTest extends ControllerTest {
         .setContent("AAAAAAAAAAAAABBBBBBBBBB")
         .setTitle("Hello world!")
         .setType(ArticleType.ARTICLE.ordinal())
+        .setUserId( 100 )
         .build();
     jsonData.put("articleEditDto", articleEditDto);
     String jsonDataString = JSON.toJSONString(jsonData);
@@ -744,7 +742,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setUserId(100)
             .setType(ArticleType.ARTICLE.ordinal())
             .build()
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -760,7 +758,7 @@ public class ArticleControllerTest extends ControllerTest {
         articleEditDto.getContent());
     Assert.assertEquals(articleDtoArgumentCaptor.getValue().getType(),
         Integer.valueOf(ArticleType.ARTICLE.ordinal())
-        );
+    );
     Assert
         .assertEquals(articleDtoArgumentCaptor.getValue().getUserId(), currentUserDto.getUserId());
   }
@@ -789,7 +787,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setUserId(100)
             .setType(ArticleType.ARTICLE.ordinal())
             .build()
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -826,7 +824,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setUserId(100)
             .setType(ArticleType.ARTICLE.ordinal())
             .build()
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -849,6 +847,7 @@ public class ArticleControllerTest extends ControllerTest {
         .setContent("AAAAAAAAAAAAABBBBBBBBBB")
         .setTitle("Hello world!")
         .setType(ArticleType.NOTICE.ordinal())
+        .setUserId(100)
         .build();
     jsonData.put("articleEditDto", articleEditDto);
     String jsonDataString = JSON.toJSONString(jsonData);
@@ -864,7 +863,7 @@ public class ArticleControllerTest extends ControllerTest {
             .setUserId(100)
             .setType(ArticleType.ARTICLE.ordinal())
             .build()
-        );
+    );
     mockMvc.perform(post("/article/edit")
         .sessionAttr("currentUser", currentUserDto)
         .contentType(APPLICATION_JSON_UTF8)
@@ -878,3 +877,5 @@ public class ArticleControllerTest extends ControllerTest {
     Assert.assertNotEquals(articleDtoArgumentCaptor.getValue().getType(), articleEditDto.getType());
   }
 }
+
+

@@ -8,22 +8,20 @@ import cn.edu.uestc.acmicpc.db.dto.field.ContestFields;
 import cn.edu.uestc.acmicpc.db.dto.field.StatusFields;
 import cn.edu.uestc.acmicpc.db.dto.field.TeamFields;
 import cn.edu.uestc.acmicpc.db.dto.impl.ContestDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.ContestProblemDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.ContestUserDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.LanguageDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.MessageDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.StatusDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.TeamDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.contestproblem.ContestProblemDetailDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.contestproblem.ContestProblemDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.contestproblem.ContestProblemSummaryDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.contestteam.ContestTeamDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.contestteam.ContestTeamListDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.contestteam.ContestTeamReportDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.contestteam.ContestTeamReviewDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.message.MessageDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.teamUser.TeamUserListDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.teamUser.TeamUserReportDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.user.OnsiteUserDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
 import cn.edu.uestc.acmicpc.service.iface.ContestImporterService;
 import cn.edu.uestc.acmicpc.service.iface.ContestProblemService;
 import cn.edu.uestc.acmicpc.service.iface.ContestRankListService;
@@ -59,22 +57,6 @@ import cn.edu.uestc.acmicpc.web.oj.controller.base.BaseController;
 import cn.edu.uestc.acmicpc.web.rank.RankList;
 import cn.edu.uestc.acmicpc.web.view.ContestRankListView;
 import cn.edu.uestc.acmicpc.web.view.ContestRegistryReportView;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -90,7 +72,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
@@ -100,6 +81,21 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * Contest controller.
@@ -108,6 +104,7 @@ import javax.xml.transform.stream.StreamResult;
 @Controller
 @RequestMapping("/contest")
 public class ContestController extends BaseController {
+  private static final Logger logger = Logger.getLogger(ContestController.class);
 
   private final ContestService contestService;
   private final ContestProblemService contestProblemService;
@@ -129,7 +126,8 @@ public class ContestController extends BaseController {
   private final LanguageService languageService;
 
   @Autowired
-  public ContestController(ContestService contestService,
+  public ContestController(
+      ContestService contestService,
       ContestProblemService contestProblemService,
       ContestImporterService contestImporterService,
       FileService fileService,
@@ -171,9 +169,10 @@ public class ContestController extends BaseController {
     return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(time);
   }
 
-  private void generateScoreboard(ContestDto contestShowDto,
+  private void generateScoreboard(
+      ContestDto contestShowDto,
       List<UserDto> contestUserList,
-      List<ContestProblemSummaryDto> contestProblemList,
+      List<ContestProblemDto> contestProblemList,
       List<LanguageDto> languageDtoList,
       ZipOutputStream zipOutputStream) throws Exception {
     TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -214,7 +213,7 @@ public class ContestController extends BaseController {
     scoreboard.appendChild(rows);
     // root -> scoreboard -> problem_legend
     Element problem_legend = document.createElement("problem_legend");
-    for (ContestProblemSummaryDto problemInfo : contestProblemList) {
+    for (ContestProblemDto problemInfo : contestProblemList) {
       // root -> scoreboard -> problem_legend -> problem
       Element problem = document.createElement("problem");
       problem.setAttribute("id", "" + (char) ('A' + problemInfo.getOrder()));
@@ -252,14 +251,15 @@ public class ContestController extends BaseController {
     transformer.transform(domSource, streamResult);
   }
 
-  private void generateEvent(ContestDto contestShowDto,
+  private void generateEvent(
+      ContestDto contestShowDto,
       List<LanguageDto> languageDtoList,
-      List<ContestProblemSummaryDto> contestProblemList,
+      List<ContestProblemDto> contestProblemList,
       List<StatusDto> statusList,
       ZipOutputStream zipOutputStream) throws Exception {
     Map<Integer, String> problemIdMap = new HashMap<>();
     Map<Integer, String> problemTitleMap = new HashMap<>();
-    for (ContestProblemSummaryDto problem : contestProblemList) {
+    for (ContestProblemDto problem : contestProblemList) {
       problemIdMap.put(problem.getProblemId(), "" + (char) ('A' + problem.getOrder()));
       problemTitleMap.put(problem.getProblemId(), problem.getTitle());
     }
@@ -341,12 +341,11 @@ public class ContestController extends BaseController {
   }
 
   @RequestMapping("exportDOMJudgeStyleReport/{contestId}")
-  public void exportDOMJudgeStyleReport(HttpSession session,
+  @LoginPermit(AuthenticationType.ADMIN)
+  public void exportDOMJudgeStyleReport(
+      HttpSession session,
       @PathVariable("contestId") Integer contestId,
       HttpServletResponse response) throws Exception {
-    if (!isAdmin(session)) {
-      throw new AppException("Permission denied!");
-    }
     // Fetch contest detail
     ContestDto contestShowDto =
         contestService.getContestDtoByContestId(contestId, ContestFields.FIELDS_FOR_SHOWING);
@@ -355,21 +354,25 @@ public class ContestController extends BaseController {
     }
     // Fetch user list
     List<UserDto> contestUserList = userService.fetchAllOnsiteUsersByContestId(contestId);
+
     // Fetch problem list
-    List<ContestProblemSummaryDto> contestProblemList = contestProblemService.
+    List<ContestProblemDto> contestProblemList = contestProblemService.
         getContestProblemSummaryDtoListByContestId(contestId);
+    logger.info("Fetch problem list completed!");
     // Fetch language list
     List<LanguageDto> languageDtoList = languageService.getLanguageList();
+    logger.info("Fetch language list completed!");
     // Fetch status list
     StatusCriteria statusCondition = new StatusCriteria();
     statusCondition.contestId = contestId;
     statusCondition.isForAdmin = false;
+    logger.info("Fetch status list completed!");
     // Sort by time
     statusCondition.orderFields = "time";
     statusCondition.orderAsc = "true";
     List<StatusDto> statusList = statusService.getStatusList(statusCondition, null,
         StatusFields.FIELDS_FOR_LIST_PAGE);
-
+    logger.info("Sort by time completed");
     // Create zip output stream
     ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
     ZipOutputStream zipOutputStream = new ZipOutputStream(outputBuffer);
@@ -385,7 +388,7 @@ public class ContestController extends BaseController {
     zipOutputStream.putNextEntry(zipEntry);
     generateEvent(contestShowDto, languageDtoList, contestProblemList, statusList, zipOutputStream);
     zipOutputStream.closeEntry();
-
+    logger.info("Zip output complted ");
     // Close
     zipOutputStream.close();
 
@@ -396,16 +399,16 @@ public class ContestController extends BaseController {
     response.getOutputStream().write(outputBuffer.toByteArray());
     response.getOutputStream().flush();
     outputBuffer.close();
+    logger.info("Zip close complted ");
   }
 
   @RequestMapping("exportCodes/{contestId}")
-  public void exportCodes(HttpSession session,
+  @LoginPermit(AuthenticationType.ADMIN)
+  public void exportCodes(
+      HttpSession session,
       @PathVariable("contestId") Integer contestId,
       HttpServletResponse response) {
     try {
-      if (!isAdmin(session)) {
-        throw new AppException("Permission denied!");
-      }
       ContestDto contestShowDto =
           contestService.getContestDtoByContestId(contestId, ContestFields.FIELDS_FOR_SHOWING);
       if (contestId == null) {
@@ -462,15 +465,12 @@ public class ContestController extends BaseController {
   }
 
   @RequestMapping("exportRankList/{contestId}")
-  public ModelAndView exportRankList(HttpSession session,
-      @PathVariable("contestId") Integer contestId) {
+  @LoginPermit(AuthenticationType.ADMIN)
+  public ModelAndView exportRankList(
+      HttpSession session, @PathVariable("contestId") Integer contestId) {
     ModelAndView result = new ModelAndView();
     result.setView(contestRankListView);
     try {
-      if (!isAdmin(session)) {
-        throw new AppException("Permission denied!");
-      }
-
       // Login first
       loginContest(session,
           ContestDto.builder()
@@ -494,8 +494,8 @@ public class ContestController extends BaseController {
     return result;
   }
 
-  private List<ContestTeamReportDto> getContestTeamReportDtoList(Integer contestId,
-      HttpSession session) throws AppException {
+  private List<ContestTeamReportDto> getContestTeamReportDtoList(
+      Integer contestId, HttpSession session) throws AppException {
     ContestDto contestDto = contestService.getContestDtoByContestId(
         contestId, ContestFields.BASIC_FIELDS);
     if (contestDto.getType() == ContestType.INHERIT.ordinal()) {
@@ -520,8 +520,8 @@ public class ContestController extends BaseController {
 
     // Put users into teams
     for (ContestTeamReportDto team : contestTeamReportDtoList) {
-      team.setTeamUsers(new LinkedList<TeamUserReportDto>());
-      team.setInvitedUsers(new LinkedList<TeamUserReportDto>());
+      team.setTeamUsers(new LinkedList<>());
+      team.setInvitedUsers(new LinkedList<>());
       for (TeamUserReportDto teamUserListDto : teamUserList) {
         if (team.getTeamId().equals(teamUserListDto.getTeamId())) {
           // Put users into current users / inactive users
@@ -538,15 +538,12 @@ public class ContestController extends BaseController {
   }
 
   @RequestMapping("registryReport/{contestId}")
+  @LoginPermit(AuthenticationType.ADMIN)
   public ModelAndView registryReport(HttpSession session,
-      @PathVariable("contestId") Integer contestId) {
+                                     @PathVariable("contestId") Integer contestId) {
     ModelAndView result = new ModelAndView();
     result.setView(contestRegistryReportView);
     try {
-      if (!isAdmin(session)) {
-        throw new AppException("Permission denied!");
-      }
-
       result.addObject("list", getContestTeamReportDtoList(contestId, session));
       result.addObject("result", "success");
     } catch (AppException e) {
@@ -638,10 +635,12 @@ public class ContestController extends BaseController {
   }
 
   @RequestMapping("loginContest")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> loginContest(HttpSession session,
-      @RequestBody @Valid ContestDto contestLoginDto,
-      BindingResult validateResult) {
+  @LoginPermit()
+  public
+  @ResponseBody
+  Map<String, Object> loginContest(HttpSession session,
+                                   @RequestBody @Valid ContestDto contestLoginDto,
+                                   BindingResult validateResult) {
     Map<String, Object> json = new HashMap<>();
     if (validateResult.hasErrors()) {
       json.put("result", "field_error");
@@ -665,7 +664,9 @@ public class ContestController extends BaseController {
 
   @RequestMapping("registryReview")
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> registryReview(
+  public
+  @ResponseBody
+  Map<String, Object> registryReview(
       @RequestBody ContestTeamReviewDto contestTeamReviewDto) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -712,7 +713,9 @@ public class ContestController extends BaseController {
 
   @RequestMapping("registryStatusList")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> registerStatusList(
+  public
+  @ResponseBody
+  Map<String, Object> registerStatusList(
       @RequestBody ContestTeamCondition contestTeamCondition,
       HttpSession session) {
     Map<String, Object> json = new HashMap<>();
@@ -738,8 +741,8 @@ public class ContestController extends BaseController {
 
         // Put users into teams
         for (ContestTeamListDto team : contestTeamList) {
-          team.setTeamUsers(new LinkedList<TeamUserListDto>());
-          team.setInvitedUsers(new LinkedList<TeamUserListDto>());
+          team.setTeamUsers(new LinkedList<>());
+          team.setInvitedUsers(new LinkedList<>());
           for (TeamUserListDto teamUserListDto : teamUserList) {
             if (team.getTeamId().compareTo(teamUserListDto.getTeamId()) == 0) {
               // Put users into current users / inactive users
@@ -768,10 +771,12 @@ public class ContestController extends BaseController {
   }
 
   @RequestMapping("register/{teamId}/{contestId}")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> register(@PathVariable("teamId") Integer teamId,
-      @PathVariable("contestId") Integer contestId,
-      HttpSession session) {
+  @LoginPermit()
+  public
+  @ResponseBody
+  Map<String, Object> register(@PathVariable("teamId") Integer teamId,
+                               @PathVariable("contestId") Integer contestId,
+                               HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
       TeamDto teamDto = teamService.getTeamDtoByTeamId(teamId, TeamFields.BASIC_FIELDS);
@@ -818,9 +823,11 @@ public class ContestController extends BaseController {
 
   @RequestMapping("status/{contestId}/{lastFetched}")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> status(@PathVariable("contestId") Integer contestId,
-      @PathVariable("lastFetched") Integer lastFetched,
-      HttpSession session) {
+  public
+  @ResponseBody
+  Map<String, Object> status(@PathVariable("contestId") Integer contestId,
+                             @PathVariable("lastFetched") Integer lastFetched,
+                             HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
       UserDto currentUser = getCurrentUser(session);
@@ -870,7 +877,7 @@ public class ContestController extends BaseController {
   }
 
   private RankList getRankList(Integer contestId,
-      HttpSession session) throws AppException {
+                               HttpSession session) throws AppException {
     ContestDto contestShowDto = contestService.getContestDtoByContestId(
         contestId, ContestFields.FIELDS_FOR_SHOWING);
     if (contestShowDto == null) {
@@ -893,7 +900,7 @@ public class ContestController extends BaseController {
           (int) getContestType(session, contestId),
           false,
           0
-          );
+      );
     } else {
       // Frozen board on last frozenTime minutes
       return contestRankListService.getRankList(
@@ -901,14 +908,16 @@ public class ContestController extends BaseController {
           (int) getContestType(session, contestId),
           contestShowDto.getTimeLeft() <= contestShowDto.getFrozenTime(),
           contestShowDto.getFrozenTime()
-          );
+      );
     }
   }
 
   @RequestMapping("rankList/{contestId}")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> rankList(@PathVariable("contestId") Integer contestId,
-      HttpSession session) {
+  public
+  @ResponseBody
+  Map<String, Object> rankList(@PathVariable("contestId") Integer contestId,
+                               HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
       json.put("rankList", getRankList(contestId, session));
@@ -926,7 +935,10 @@ public class ContestController extends BaseController {
 
   @RequestMapping("data/{contestId}")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> data(@PathVariable("contestId") Integer contestId,
+  public
+  @ResponseBody
+  Map<String, Object> data(
+      @PathVariable("contestId") Integer contestId,
       HttpSession session) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -957,18 +969,26 @@ public class ContestController extends BaseController {
       // Update contest type
       contestShowDto.setType(getContestType(session, contestId));
 
-      List<ContestProblemDetailDto> contestProblemList;
+      List<ContestProblemDto> contestProblemList;
       if (contestShowDto.getStatus().equals("Pending") && !isAdmin(session)) {
         contestProblemList = new LinkedList<>();
       } else {
         contestProblemList = contestProblemService
             .getContestProblemDetailDtoListByContestId(contestId);
         if (!isAdmin(session)) {
-          for (ContestProblemDetailDto contestProblemDetailDto : contestProblemList) {
+          for (ContestProblemDto contestProblemDetailDto : contestProblemList) {
             // Stash problem source
             contestProblemDetailDto.setSource("");
           }
         }
+      }
+      for (int i = 0; i < contestProblemList.size(); ++i) {
+        int d = i + 65;
+        String wp = new String();
+        wp = wp + (char) d;
+        ContestProblemDto e = contestProblemList.get(i);
+        e.setOrderCharacter(wp);
+        contestProblemList.set(i, e);
       }
 
       json.put("contest", contestShowDto);
@@ -980,14 +1000,17 @@ public class ContestController extends BaseController {
     } catch (Exception e) {
       e.printStackTrace();
       json.put("result", "error");
-      json.put("error_msg", "Unknown exception occurred.");
+      json.put("error_msg", "Unknown 1 exception occurred.");
     }
     return json;
   }
 
   @RequestMapping("search")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> search(HttpSession session,
+  public
+  @ResponseBody
+  Map<String, Object> search(
+      HttpSession session,
       @RequestBody(required = false) ContestCriteria criteria) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -1029,7 +1052,10 @@ public class ContestController extends BaseController {
 
   @RequestMapping("operator/{id}/{field}/{value}")
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> operator(@PathVariable("id") String targetId,
+  public
+  @ResponseBody
+  Map<String, Object> operator(
+      @PathVariable("id") String targetId,
       @PathVariable("field") String field,
       @PathVariable("value") String value) {
     Map<String, Object> json = new HashMap<>();
@@ -1046,7 +1072,10 @@ public class ContestController extends BaseController {
 
   @RequestMapping("edit")
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> edit(@RequestBody @Valid ContestDto contestEditDto,
+  public
+  @ResponseBody
+  Map<String, Object> edit(
+      @RequestBody @Valid ContestDto contestEditDto,
       BindingResult validateResult) {
     Map<String, Object> json = new HashMap<>();
     if (validateResult.hasErrors()) {
@@ -1087,7 +1116,7 @@ public class ContestController extends BaseController {
           String newDirectory = "contest/" + contestId + "/";
           contestEditDto.setDescription(pictureService.modifyPictureLocation(
               contestEditDto.getDescription(), oldDirectory, newDirectory
-              ));
+          ));
         } else {
           contestDto = contestService.getContestDtoByContestId(
               contestEditDto.getContestId(), ContestFields.BASIC_FIELDS);
@@ -1122,17 +1151,16 @@ public class ContestController extends BaseController {
         contestProblemService.removeContestProblemByContestId(contestDto.getContestId());
         // Add new contest problems
         for (int order = 0; order < problemIdList.size(); order++) {
-          Integer contestProblemId = contestProblemService.createNewContestProblem(
+          contestProblemService.createNewContestProblem(
               ContestProblemDto.builder()
                   .setContestId(contestDto.getContestId())
                   .setOrder(order)
                   .setProblemId(problemIdList.get(order))
-                  .build()
-              );
+                  .build());
 
           // Check problem added success.
           ContestProblemDto contestProblemDto = contestProblemService
-              .getContestProblemDto(contestProblemId);
+              .getBasicContestProblemDto(contestDto.getContestId(), problemIdList.get(order));
           AppExceptionUtil.assertNotNull(contestProblemDto);
           AppExceptionUtil.assertNotNull(contestProblemDto.getContestProblemId());
         }
@@ -1151,14 +1179,14 @@ public class ContestController extends BaseController {
             contestEditDto.getLengthDays() * 24 * 60 * 60 +
                 contestEditDto.getLengthHours() * 60 * 60 +
                 contestEditDto.getLengthMinutes() * 60
-            );
+        );
         contestDto.setTime(contestEditDto.getTime());
         if (contestEditDto.getNeedFrozen()) {
           contestDto.setFrozenTime(
               contestEditDto.getFrozenLengthDays() * 24 * 60 * 60 +
                   contestEditDto.getFrozenLengthHours() * 60 * 60 +
                   contestEditDto.getFrozenLengthMinutes() * 60
-              );
+          );
         } else {
           contestDto.setFrozenTime(0);
         }
@@ -1173,6 +1201,7 @@ public class ContestController extends BaseController {
       } catch (AppException e) {
         json.put("result", "error");
         json.put("error_msg", e.getMessage());
+        e.printStackTrace();
       }
     }
     return json;
@@ -1181,15 +1210,17 @@ public class ContestController extends BaseController {
   @RequestMapping(value = "createContestByArchiveFile",
       method = RequestMethod.POST)
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> createContestByArchiveFile(
-      @RequestParam(value = "uploadFile", required = true) MultipartFile[] files) {
+  public
+  @ResponseBody
+  Map<String, Object> createContestByArchiveFile(
+      @RequestParam(value = "uploadFile") MultipartFile[] files) {
     Map<String, Object> json = new HashMap<>();
     try {
       FileInformationDto fileInformationDto = fileService.uploadContestArchive(
           FileUploadDto.builder()
               .setFiles(Arrays.asList(files))
               .build()
-          );
+      );
       ContestDto contestDto = contestImporterService.parseContestZipArchive(fileInformationDto);
       json.put("success", "true");
       json.put("contestId", contestDto.getContestId());
@@ -1206,15 +1237,17 @@ public class ContestController extends BaseController {
   @RequestMapping(value = "uploadOnsiteUserFile",
       method = RequestMethod.POST)
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> uploadOnsiteUserFile(
-      @RequestParam(value = "uploadFile", required = true) MultipartFile[] files) {
+  public
+  @ResponseBody
+  Map<String, Object> uploadOnsiteUserFile(
+      @RequestParam(value = "uploadFile") MultipartFile[] files) {
     Map<String, Object> json = new HashMap<>();
     try {
       FileInformationDto fileInformationDto = fileService.uploadContestArchive(
           FileUploadDto.builder()
               .setFiles(Arrays.asList(files))
               .build()
-          );
+      );
 
       File csvFile = new File(settings.UPLOAD_FOLDER + fileInformationDto.getFileName());
       List<OnsiteUserDto> result = CSVUtil.parseArray(csvFile, OnsiteUserDto.class);
@@ -1232,7 +1265,9 @@ public class ContestController extends BaseController {
 
   @RequestMapping("updateOnsiteUser")
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> updateOnsiteUser(
+  public
+  @ResponseBody
+  Map<String, Object> updateOnsiteUser(
       @RequestBody ContestDto contestEditDto) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -1250,7 +1285,7 @@ public class ContestController extends BaseController {
                 .setStatus((byte) ContestRegistryStatusType.ACCEPTED.ordinal())
                 .setComment("Users in contest " + contestId)
                 .build()
-            );
+        );
       }
       json.put("result", "success");
     } catch (AppException e) {
@@ -1262,7 +1297,9 @@ public class ContestController extends BaseController {
 
   @RequestMapping("fetchAllOnsiteUsers/{contestId}")
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> fetchAllOnsiteUsers(
+  public
+  @ResponseBody
+  Map<String, Object> fetchAllOnsiteUsers(
       @PathVariable("contestId") Integer contestId) {
     Map<String, Object> json = new HashMap<>();
     try {

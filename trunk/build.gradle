@@ -4,10 +4,10 @@ apply plugin: 'checkstyle'
 apply plugin: 'jacoco'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
-apply plugin: 'jetty'
+apply from: 'https://raw.githubusercontent.com/akhikhl/gretty/master/pluginScripts/gretty.plugin'
 
 group = 'cn.edu.uestc.acmicpc'
-version = '2.2.3'
+version = '2.3.0'
 
 description = """UESTC Online Judge"""
 
@@ -15,10 +15,10 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 // Run under http://host/
-jettyRun.contextPath = ""
-jettyRunWar.contextPath = ""
-jettyRun.httpPort = Integer.valueOf(httpPort)
-jettyRunWar.httpPort = Integer.valueOf(httpPort)
+gretty {
+  httpPort = httpPort
+  contextPath = ""
+}
 
 task checkControllerDoNotContainDaos(type: Exec) {
   commandLine "python2",
@@ -91,14 +91,18 @@ task generateTestPropertyFile(type: Exec) {
       file(judgeWorkPath).absolutePath
 }
 
-task cleanResources << {
-  delete "src/main/resources/resources.properties"
-  delete "src/test/resources/resources.properties"
-  delete "src/gen/"
+task cleanResources {
+  doLast {
+    delete "src/main/resources/resources.properties"
+    delete "src/test/resources/resources.properties"
+    delete "src/gen/"
+  }
 }
 
 checkDtosDoNotContainEntities.dependsOn(generateDtos)
 checkControllerDoNotContainDaos.dependsOn(generateDaos)
+compileJava.dependsOn(generateDtos)
+compileJava.dependsOn(generateDaos)
 compileJava.dependsOn(checkControllerDoNotContainDaos)
 compileJava.dependsOn(checkDtosDoNotContainEntities)
 compileJava.dependsOn(checkTestingCodeAllDoNotUseJunit)
@@ -129,6 +133,8 @@ sourceSets {
 }
 
 repositories {
+  // uncomment this line if needed.
+  // maven{url "http://maven.oschina.net/content/groups/public/"}
   mavenCentral()
   mavenLocal()
 }
@@ -162,15 +168,6 @@ dependencies {
   compile "javax.servlet:jstl:1.2"
   compile "com.alibaba:druid:1.0.4"
   compile "com.alibaba:fastjson:1.1.39"
-
-  final jettyGroup = 'org.eclipse.jetty'
-  final jettyVersion = '9.1.0.M0'
-  compile "$jettyGroup:jetty-server:$jettyVersion"
-  compile "$jettyGroup:jetty-servlet:$jettyVersion"
-  compile "$jettyGroup:jetty-webapp:$jettyVersion"
-  compile "$jettyGroup:jetty-servlets:$jettyVersion"
-  compile "$jettyGroup:jetty-jsp:$jettyVersion"
-  compile "$jettyGroup:jetty-util:$jettyVersion"
 
   final hibernateGroup = 'org.hibernate'
   final hibernateVersion = '4.3.0.Final'
@@ -215,11 +212,10 @@ dependencies {
 
 test {
   doFirst {
-    jettyRun.daemon = true
-    task(":jettyRun").execute()
+    task(":appStart").execute()
   }
   doLast {
-    task(":jettyStop").execute()
+    task(":appStop").execute()
   }
   useTestNG()
 }

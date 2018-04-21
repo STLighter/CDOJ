@@ -12,3 +12,6 @@ trunk/build/
 *.ipr
 *.iws
 target/
+/.vagrant/
+*.log
+bazel-*

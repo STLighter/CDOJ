@@ -1,13 +1,12 @@
 package cn.edu.uestc.acmicpc.util.exception;
 
 import cn.edu.uestc.acmicpc.util.helper.ObjectUtil;
-
-import org.springframework.validation.FieldError;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.validation.FieldError;
 
 /**
  * Application exception to describe errors on UI fields.
@@ -75,9 +74,7 @@ public class FieldException extends AppException implements Iterable<FieldError>
    */
   public void addErrors(FieldError... errors) {
     if (errors != null) {
-      for (FieldError error : errors) {
-        this.errors.add(error);
-      }
+      Collections.addAll(this.errors, errors);
     }
   }
 
@@ -98,11 +95,12 @@ public class FieldException extends AppException implements Iterable<FieldError>
   public boolean equals(Object obj) {
     if (obj instanceof FieldException) {
       FieldException e = (FieldException) obj;
-      if (!super.equals(obj)) {
-        return false;
-      }
-      return Objects.equals(errors, e.errors);
+      return super.equals(obj) && Objects.equals(errors, e.errors);
     }
     return false;
+  }
+
+  public List<FieldError> getErrors() {
+    return errors;
   }
 }

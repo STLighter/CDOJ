@@ -5,10 +5,10 @@ import cn.edu.uestc.acmicpc.db.dto.field.ContestFields;
 import cn.edu.uestc.acmicpc.db.dto.field.StatusFields;
 import cn.edu.uestc.acmicpc.db.dto.impl.CodeDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.ContestDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.MessageDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.StatusDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.message.MessageDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.db.dto.impl.problem.ProblemDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
 import cn.edu.uestc.acmicpc.service.iface.CodeService;
 import cn.edu.uestc.acmicpc.service.iface.CompileInfoService;
 import cn.edu.uestc.acmicpc.service.iface.ContestProblemService;
@@ -29,7 +29,13 @@ import cn.edu.uestc.acmicpc.util.helper.StringUtil;
 import cn.edu.uestc.acmicpc.util.settings.Settings;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
 import cn.edu.uestc.acmicpc.web.oj.controller.base.BaseController;
-
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -37,15 +43,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.sql.Timestamp;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpSession;
-import javax.validation.Valid;
 
 @Controller
 @RequestMapping("/status")
@@ -64,15 +61,15 @@ public class StatusController extends BaseController {
 
   @Autowired
   public StatusController(StatusService statusService,
-      ProblemService problemService,
-      CodeService codeService,
-      CompileInfoService compileInfoService,
-      ContestService contestService,
-      ContestProblemService contestProblemService,
-      LanguageService languageService,
-      UserService userService,
-      Settings settings,
-      MessageService messageService) {
+                          ProblemService problemService,
+                          CodeService codeService,
+                          CompileInfoService compileInfoService,
+                          ContestService contestService,
+                          ContestProblemService contestProblemService,
+                          LanguageService languageService,
+                          UserService userService,
+                          Settings settings,
+                          MessageService messageService) {
     this.statusService = statusService;
     this.problemService = problemService;
     this.codeService = codeService;
@@ -87,8 +84,10 @@ public class StatusController extends BaseController {
 
   @RequestMapping("search")
   @LoginPermit(NeedLogin = false)
-  public @ResponseBody Map<String, Object> search(HttpSession session,
-      @RequestBody StatusCriteria statusCriteria) {
+  public
+  @ResponseBody
+  Map<String, Object> search(HttpSession session,
+                             @RequestBody StatusCriteria statusCriteria) {
     Map<String, Object> json = new HashMap<>();
     try {
       if (statusCriteria.contestId == null) {
@@ -111,8 +110,7 @@ public class StatusController extends BaseController {
           Byte type = getContestType(session, statusCriteria.contestId);
           if (type == ContestType.INVITED.ordinal()) {
             // Only show current user and his member's status
-            List<Integer> memberList = getContestTeamMembers(session, statusCriteria.contestId);
-            statusCriteria.userIdList = memberList;
+            statusCriteria.userIdList = getContestTeamMembers(session, statusCriteria.contestId);
           } else {
             // Only show current user's status
             UserDto currentUser = getCurrentUser(session);
@@ -132,12 +130,12 @@ public class StatusController extends BaseController {
           // Only show status submitted for visible problem
           statusCriteria.isProblemVisible = true;
           statusCriteria.problemType = ProblemType.NORMAL;
-          if(statusCriteria.problemId != null) {
+          if (statusCriteria.problemId != null) {
             ProblemDto problemDto = problemService.getProblemDtoByProblemId(statusCriteria.problemId);
             UserDto currentUser = getCurrentUser(session);
             //internal problem' status only show for internal user who are searching.
-            if(currentUser != null && problemDto != null && problemDto.getType() == ProblemType.INTERNAL
-             && currentUser.getType() == AuthenticationType.INTERNAL.ordinal()) {
+            if (currentUser != null && problemDto != null && problemDto.getType() == ProblemType.INTERNAL
+                && currentUser.getType() == AuthenticationType.INTERNAL.ordinal()) {
               statusCriteria.problemType = ProblemType.INTERNAL;
             }
           }
@@ -183,7 +181,9 @@ public class StatusController extends BaseController {
 
   @RequestMapping("rejudgeStatusCount")
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> rejudgeStatusCount(
+  public
+  @ResponseBody
+  Map<String, Object> rejudgeStatusCount(
       @RequestBody StatusCriteria statusCriteria) {
     Map<String, Object> json = new HashMap<>();
     try {
@@ -217,7 +217,9 @@ public class StatusController extends BaseController {
 
   @RequestMapping("rejudge")
   @LoginPermit(AuthenticationType.ADMIN)
-  public @ResponseBody Map<String, Object> rejudge(@RequestBody StatusCriteria statusCriteria) {
+  public
+  @ResponseBody
+  Map<String, Object> rejudge(@RequestBody StatusCriteria statusCriteria) {
     Map<String, Object> json = new HashMap<>();
     try {
       if (statusCriteria.userName != null) {
@@ -253,10 +255,12 @@ public class StatusController extends BaseController {
   }
 
   @RequestMapping("submit")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> submit(HttpSession session,
-      @RequestBody @Valid StatusDto submitDto,
-      BindingResult validateResult) {
+  @LoginPermit()
+  public
+  @ResponseBody
+  Map<String, Object> submit(HttpSession session,
+                             @RequestBody @Valid StatusDto submitDto,
+                             BindingResult validateResult) {
     Map<String, Object> json = new HashMap<>();
     if (validateResult.hasErrors()) {
       json.put("result", "field_error");
@@ -340,9 +344,11 @@ public class StatusController extends BaseController {
   }
 
   @RequestMapping("info/{statusId}")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> info(HttpSession session,
-      @PathVariable Integer statusId) {
+  @LoginPermit()
+  public
+  @ResponseBody
+  Map<String, Object> info(HttpSession session,
+                           @PathVariable Integer statusId) {
     Map<String, Object> json = new HashMap<>();
     try {
       StatusDto statusInformationDto =
@@ -402,9 +408,11 @@ public class StatusController extends BaseController {
   }
 
   @RequestMapping("print")
-  @LoginPermit(NeedLogin = true)
-  public @ResponseBody Map<String, Object> print(HttpSession session,
-      @RequestBody StatusDto submitDto) {
+  @LoginPermit()
+  public
+  @ResponseBody
+  Map<String, Object> print(HttpSession session,
+                            @RequestBody StatusDto submitDto) {
     Map<String, Object> json = new HashMap<>();
     try {
       String codeContent = submitDto.getCodeContent();

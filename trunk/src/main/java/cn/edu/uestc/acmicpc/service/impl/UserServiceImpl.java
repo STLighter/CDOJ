@@ -1,13 +1,13 @@
 package cn.edu.uestc.acmicpc.service.impl;
 
-import cn.edu.uestc.acmicpc.db.condition.base.Condition;
-import cn.edu.uestc.acmicpc.db.condition.impl.UserCondition;
+import cn.edu.uestc.acmicpc.db.criteria.ContestUserCriteria;
+import cn.edu.uestc.acmicpc.db.criteria.UserCriteria;
+import cn.edu.uestc.acmicpc.db.dao.iface.ContestUserDao;
 import cn.edu.uestc.acmicpc.db.dao.iface.UserDao;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserCenterDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserEditorDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserListDto;
-import cn.edu.uestc.acmicpc.db.dto.impl.user.UserTypeAheadDto;
+import cn.edu.uestc.acmicpc.db.dto.field.ContestUserFields;
+import cn.edu.uestc.acmicpc.db.dto.field.UserFields;
+import cn.edu.uestc.acmicpc.db.dto.impl.ContestUserDto;
+import cn.edu.uestc.acmicpc.db.dto.impl.UserDto;
 import cn.edu.uestc.acmicpc.db.entity.User;
 import cn.edu.uestc.acmicpc.service.iface.UserService;
 import cn.edu.uestc.acmicpc.util.enums.AuthenticationType;
@@ -17,16 +17,16 @@ import cn.edu.uestc.acmicpc.util.enums.TShirtsSizeType;
 import cn.edu.uestc.acmicpc.util.exception.AppException;
 import cn.edu.uestc.acmicpc.util.exception.AppExceptionUtil;
 import cn.edu.uestc.acmicpc.web.dto.PageInfo;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implementation for {@link UserService}.
@@ -35,11 +35,15 @@ import java.util.Map;
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class UserServiceImpl extends AbstractService implements UserService {
+  private static final Logger logger = Logger.getLogger(UserServiceImpl.class);
 
+  private final ContestUserDao contestUserDao;
   private final UserDao userDao;
 
+
   @Autowired
-  public UserServiceImpl(UserDao userDao) {
+  public UserServiceImpl(ContestUserDao contestUserDao, UserDao userDao) {
+    this.contestUserDao = contestUserDao;
     this.userDao = userDao;
   }
 
@@ -115,50 +119,53 @@ public class UserServiceImpl extends AbstractService implements UserService {
   }
 
   @Override
-  public List<UserListDto> getUserListDtoList(UserCondition userCondition,
-      PageInfo pageInfo) throws AppException {
-    Condition condition = userCondition.getCondition();
-    condition.setPageInfo(pageInfo);
-    return userDao.findAll(UserListDto.class, UserListDto.builder(), condition);
+  public List<UserDto> getUserListDtoList(
+      UserCriteria criteria, PageInfo pageInfo) throws AppException {
+    return userDao.findAll(criteria, pageInfo, UserFields.LIST_FIELDS);
   }
 
   @Override
-  public List<UserTypeAheadDto> getUserTypeAheadDtoList(UserCondition userCondition,
-      PageInfo pageInfo) throws AppException {
-    Condition condition = userCondition.getCondition();
-    condition.setPageInfo(pageInfo);
-    return userDao.findAll(UserTypeAheadDto.class, UserTypeAheadDto.builder(), condition);
+  public List<UserDto> getUserTypeAheadDtoList(
+      UserCriteria criteria, PageInfo pageInfo) throws AppException {
+    return userDao.findAll(criteria, pageInfo, UserFields.TYPE_AHEAD_FIELDS);
   }
 
   @Override
   public UserDto getUserDtoByUserName(String userName) throws AppException {
-    return userDao.getDtoByUniqueField(UserDto.class, UserDto.builder(),
-        "userName", userName);
+    UserCriteria criteria = new UserCriteria();
+    criteria.userNameForUniqueQuery = userName;
+    List<UserDto> result = userDao.findAll(criteria, null, UserFields.ALL_FIELDS);
+    return result.isEmpty() ? null : result.iterator().next();
   }
 
   @Override
   public UserDto getUserDtoByEmail(String email) throws AppException {
-    return userDao.getDtoByUniqueField(UserDto.class, UserDto.builder(),
-        "email", email);
+    UserCriteria criteria = new UserCriteria();
+    criteria.emailForUniqueQuery = email;
+    List<UserDto> result = userDao.findAll(criteria, null, UserFields.ALL_FIELDS);
+    return result.isEmpty() ? null : result.iterator().next();
   }
 
   @Override
   public UserDto getUserDtoByUserId(Integer userId) throws AppException {
-    return userDao.getDtoByUniqueField(UserDto.class, UserDto.builder(),
-        "userId", userId);
+    UserCriteria criteria = new UserCriteria();
+    criteria.userId = userId;
+    List<UserDto> result = userDao.findAll(criteria, null, UserFields.ALL_FIELDS);
+    return result.isEmpty() ? null : result.iterator().next();
   }
 
   @Override
-  public UserCenterDto getUserCenterDtoByUserName(String userName)
+  public UserDto getUserCenterDtoByUserName(String userName)
       throws AppException {
-    return userDao.getDtoByUniqueField(UserCenterDto.class,
-        UserCenterDto.builder(), "userName",
-        userName);
+    UserCriteria criteria = new UserCriteria();
+    criteria.userNameForUniqueQuery = userName;
+    List<UserDto> result = userDao.findAll(criteria, null, UserFields.CENTER_FIELDS);
+    return result.isEmpty() ? null : result.iterator().next();
   }
 
   @Override
-  public Long count(UserCondition userCondition) throws AppException {
-    return userDao.count(userCondition.getCondition());
+  public Long count(UserCriteria criteria) throws AppException {
+    return userDao.count(criteria);
   }
 
   @Override
@@ -208,22 +215,24 @@ public class UserServiceImpl extends AbstractService implements UserService {
 
   @Override
   public List<UserDto> fetchAllOnsiteUsersByContestId(Integer contestId) throws AppException {
-    StringBuilder hqlBuilder = new StringBuilder();
-    hqlBuilder
-        .append("from User where")
-        .append(" userId in (")
-        .append("   select userId from ContestUser where contestId = ")
-        .append(contestId)
-        .append(" )")
-        .append(")");
-    return userDao.findAll(UserDto.class, UserDto.builder(), hqlBuilder.toString(), null);
+    ContestUserCriteria contestUserCriteria = new ContestUserCriteria();
+    contestUserCriteria.contestId = contestId;
+    List<ContestUserDto> contestUsers =
+        contestUserDao.findAll(contestUserCriteria, null, ContestUserFields.ALL_FIELDS);
+
+    UserCriteria userCriteria = new UserCriteria();
+    userCriteria.userIds =
+        contestUsers.stream().map(ContestUserDto::getUserId).collect(Collectors.toSet());
+    return userDao.findAll(userCriteria, null, UserFields.ALL_FIELDS);
   }
 
   @Override
-  public UserEditorDto getUserEditorDtoByUserName(String userName)
+  public UserDto getUserEditorDtoByUserName(String userName)
       throws AppException {
-    return userDao.getDtoByUniqueField(UserEditorDto.class,
-        UserEditorDto.builder(), "userName", userName);
+    UserCriteria criteria = new UserCriteria();
+    criteria.userNameForUniqueQuery = userName;
+    List<UserDto> results = userDao.findAll(criteria, null, UserFields.EDITOR_FIELDS);
+    return results.isEmpty() ? null : results.iterator().next();
   }
 
 }
